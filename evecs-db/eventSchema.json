@@ -4,6 +4,7 @@
       "event_id",
       "creator_id",
       "name",
+      "type",
       "desc",
       "location",
       "start_date",
@@ -24,6 +25,10 @@
       "name": {
         "bsonType": "string",
         "description": "Name of the event."
+      },
+      "type": {
+        "bsonType": "string",
+        "description": "Indicates the type of event. (e.g. society, lecture, etc.)"
       },
       "desc": {
         "bsonType": "string",
