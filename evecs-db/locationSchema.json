@@ -1,0 +1,53 @@
+{
+    "id": "locations",
+    "partitionKey": {
+      "paths": ["/location_id"],
+      "kind": "Hash"
+    },
+    "indexingPolicy": {
+      "indexingMode": "consistent",
+      "automatic": true,
+      "includedPaths": [
+        { "path": "/*" }
+      ],
+      "excludedPaths": [
+        { "path": "/\"_etag\"/?" }
+      ]
+    },
+    "schema": {
+      "bsonType": "object",
+      "required": ["location_id", "location_name", "events_ids", "capacity"],
+      "properties": {
+        "location_id": {
+          "bsonType": "string",
+          "description": "Unique identifier for the location."
+        },
+        "location_name": {
+          "bsonType": "string",
+          "description": "Name of the location."
+        },
+        "events_ids": {
+          "bsonType": "array",
+          "description": "List of event IDs associated with this location.",
+          "items": {
+            "bsonType": "object",
+            "required": ["event_id"],
+            "properties": {
+              "event_id": {
+                "bsonType": "string",
+                "description": "Identifier of the event."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "capacity": {
+          "bsonType": "number",
+          "minimum": 0,
+          "description": "Capacity of the location."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+  
