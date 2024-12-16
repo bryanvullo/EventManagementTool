@@ -1,0 +1,66 @@
+{
+  "bsonType": "object",
+  "required": [
+    "event_id",
+    "creator_id",
+    "name",
+    "type",
+    "desc",
+    "location_id",
+    "start_date",
+    "end_date",
+    "max_tick",
+    "max_tick_pp",
+    "img_url"
+  ],
+  "properties": {
+    "event_id": {
+      "bsonType": "string",
+      "description": "Unique identifier for the event."
+    },
+    "creator_id": {
+      "bsonType": "string",
+      "description": "Identifier of the user who created the event."
+    },
+    "name": {
+      "bsonType": "string",
+      "description": "Name of the event."
+    },
+    "type": {
+      "bsonType": "string",
+      "description": "Indicates the type of event. (e.g. society, lecture, etc.)"
+    },
+    "desc": {
+      "bsonType": "string",
+      "description": "Description of the event."
+    },
+    "location_id": {
+      "bsonType": "string",
+      "description": "Location reference in locations partition."
+    },
+    "start_date": {
+      "bsonType": "date",
+      "description": "Start date and time of the event."
+    },
+    "end_date": {
+      "bsonType": "date",
+      "description": "End date and time of the event."
+    },
+    "max_tick": {
+      "bsonType": "number",
+      "minimum": 0,
+      "description": "Maximum number of tickets available for the event."
+    },
+    "max_tick_pp": {
+      "bsonType": "number",
+      "minimum": 0,
+      "description": "Maximum number of tickets per person."
+    },
+    "img_url": {
+      "bsonType": "string",
+      "pattern": "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/[^\\s]*)?$",
+      "description": "URL of the event image."
+    }
+  },
+  "additionalProperties": false
+}
