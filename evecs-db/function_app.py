@@ -1,7 +1,21 @@
-import azure.functions as func
 import logging
+import json
+import os
+import requests
+
+# azure imports
+import azure.functions as func
+from azure.cosmos import CosmosClient
+from openai import AzureOpenAI
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+
+GroupCosmos = CosmosClient.from_connection_string(os.environ['DB_CONNECTION_STRING'])
+EvecsDBProxy = GroupCosmos.get_database_client(os.environ['DB_NAME'])
+EventsContainerProxy = EvecsDBProxy.get_container_client(os.environ['EVENTS_CONTAINER'])
+TicketsContainerProxy = EvecsDBProxy.get_container_client(os.environ['TICKETS_CONTAINER'])
+LocationsContainerProxy = EvecsDBProxy.get_container_client(os.environ['LOCATIONS_CONTAINER'])
+UsersContainerProxy = EvecsDBProxy.get_container_client(os.environ['USERS_CONTAINER'])
 
 @app.route(route="placeholder_function")
 def placeholder_function(req: func.HttpRequest) -> func.HttpResponse:
