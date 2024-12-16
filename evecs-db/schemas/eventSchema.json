@@ -30,6 +30,13 @@
       "bsonType": "string",
       "description": "Indicates the type of event. (e.g. society, lecture, etc.)"
     },
+    "tags": {
+      "bsonType": "array",
+      "description": "List of tags associated with the event.",
+      "items": {
+        "bsonType": "string"
+      }
+    },
     "desc": {
       "bsonType": "string",
       "description": "Description of the event."
