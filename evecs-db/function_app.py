@@ -3,10 +3,12 @@ import json
 import jsonschema
 import os
 import requests
+import uuid
+
 
 # azure imports
 import azure.functions as func
-from azure.cosmos import CosmosClient
+from azure.cosmos import CosmosClient, exceptions as cosmos_exceptions
 from openai import AzureOpenAI
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
@@ -93,7 +95,9 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Creates a new ticket document in the tickets container.
-    Expects JSON body matching ticket.json schema.
+    We auto-generate the ticket_id (and thus the Cosmos DB 'id').
+    The request body must contain other required fields (e.g., user_id, email, event_id).
+    
     Returns a status message on success/failure.
     Partition key is ticket_id.
     """
@@ -101,20 +105,22 @@ def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
         # Parse JSON from request
         data = req.get_json()
 
+        # Generate a new ticket_id (UUID) and assign to data
+        new_ticket_id = str(uuid.uuid4())
+        data["ticket_id"] = new_ticket_id
+        data["id"] = new_ticket_id  # 'id' must match the partition key for direct reads in Cosmos
+
         # Load and validate against ticket schema
         with open('schemas/ticket.json', 'r') as f:
             schema = json.load(f)
         jsonschema.validate(instance=data, schema=schema)
-
-        # Ensure "id" matches "ticket_id" for direct reads/deletes
-        data["id"] = data["ticket_id"]
 
         # Create item in Cosmos DB
         TicketsContainerProxy.create_item(data)
 
         return func.HttpResponse(
             status_code=200,
-            body=json.dumps({"message": "Ticket created successfully."})
+            body=json.dumps({"message": "Ticket created successfully.", "ticket_id": new_ticket_id})
         )
     except json.JSONDecodeError:
         return func.HttpResponse(
@@ -217,6 +223,7 @@ def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Updates (replaces) a ticket document with the new data.
     Must provide valid JSON that passes schema validation.
+    The ticket_id in the route is used for the partition key.
     """
     try:
         ticket_id = req.route_params.get('ticket_id')
@@ -227,7 +234,7 @@ def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
             schema = json.load(f)
         jsonschema.validate(instance=new_data, schema=schema)
 
-        # First, read the existing ticket
+        # Read the existing ticket to ensure it exists
         existing_ticket = TicketsContainerProxy.read_item(
             item=ticket_id,
             partition_key=ticket_id
@@ -240,7 +247,7 @@ def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
 
         # Perform the replace
         TicketsContainerProxy.replace_item(
-            item=existing_ticket, 
+            item=existing_ticket,
             body=new_data
         )
 
