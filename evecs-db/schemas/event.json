@@ -2,7 +2,7 @@
   "bsonType": "object",
   "required": [
     "event_id",
-    "creator_id",
+    "creator_id",  
     "name",
     "type",
     "desc",
@@ -19,8 +19,11 @@
       "description": "Unique identifier for the event."
     },
     "creator_id": {
-      "bsonType": "string",
-      "description": "Identifier of the user who created the event."
+      "bsonType": "array",
+      "description": "Array of user IDs who are event owners or admins.",
+      "items": {
+        "bsonType": "string"
+      }
     },
     "name": {
       "bsonType": "string",
@@ -46,12 +49,14 @@
       "description": "Location reference in locations partition."
     },
     "start_date": {
-      "bsonType": "date",
-      "description": "Start date and time of the event."
+      "bsonType": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$",
+      "description": "Start date/time in UTC, format yyyy-MM-ddTHH:mm:ss.fffffffZ"
     },
     "end_date": {
-      "bsonType": "date",
-      "description": "End date and time of the event."
+      "bsonType": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}Z$",
+      "description": "End date/time in UTC, format yyyy-MM-ddTHH:mm:ss.fffffffZ"
     },
     "max_tick": {
       "bsonType": "number",
