@@ -30,3 +30,6 @@ jsonschema
 uuid4
 requests
 re
+python-dotenv
+python-dateutil
+urllib-parse

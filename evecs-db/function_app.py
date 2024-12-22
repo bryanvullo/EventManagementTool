@@ -2,8 +2,11 @@ import logging
 import json
 import jsonschema
 import os
-import requests
-import uuid 
+import uuid
+
+# date parsing
+from dateutil import parser  # pip install python-dateutil
+from urllib.parse import urlparse
 
 # azure imports
 import azure.functions as func
@@ -92,12 +95,13 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 with open('schemas/event.json', 'r') as f:
     EVENT_SCHEMA = json.load(f)
 
+# Create event
 @app.route(route="create_event", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_event(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_json()
 
-        # Check mandatory fields (including user_id -> to be first admin)
+        # ---- 0) Check mandatory fields  ----
         mandatory_fields = [
             "user_id", "name", "type", "desc", "location_id",
             "start_date", "end_date", "max_tick", "max_tick_pp"
@@ -109,40 +113,139 @@ def create_event(req: func.HttpRequest) -> func.HttpResponse:
                     status_code=400
                 )
 
-        # Generate event_id
-        event_id = str(uuid.uuid4())
+        # ---- 1) start_date < end_date ----
+        try:
+            start_dt = parser.isoparse(body["start_date"])
+            end_dt = parser.isoparse(body["end_date"])
+        except ValueError:
+            return func.HttpResponse(
+                body=json.dumps({"error": "Invalid date format. Please use ISO 8601 (e.g. yyyy-MM-ddTHH:mm:ss.fffffffZ)"}),
+                status_code=400
+            )
+        if start_dt >= end_dt:
+            return func.HttpResponse(
+                body=json.dumps({"error": "Start date must be strictly before end date."}),
+                status_code=400
+            )
 
-        # Build the event document
-        # Instead of "creator_id": body["user_id"], we store an array of IDs
+        # ---- 2) max_tick and max_tick_pp must be > 0  ----
+        if body["max_tick"] <= 0:
+            return func.HttpResponse(
+                body=json.dumps({"error": "max_tick must be greater than 0."}),
+                status_code=400
+            )
+        if body["max_tick_pp"] <= 0:
+            return func.HttpResponse(
+                body=json.dumps({"error": "max_tick_pp must be greater than 0."}),
+                status_code=400
+            )
+
+        # ---- 3) Check location_id is not null and exists in DB  ----
+        if not body["location_id"]:
+            return func.HttpResponse(
+                body=json.dumps({"error": "location_id cannot be null or empty."}),
+                status_code=400
+            )
+
+        loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+        loc_params = [{"name": "@loc_id", "value": body["location_id"]}]
+        loc_items = list(LocationsContainerProxy.query_items(
+            query=loc_query,
+            parameters=loc_params,
+            enable_cross_partition_query=True
+        ))
+        if not loc_items:
+            return func.HttpResponse(
+                body=json.dumps({"error": f"Location '{body['location_id']}' not found in the database."}),
+                status_code=400
+            )
+
+        # ---- 4) Check img_url is a URL (or can be null/empty)  ----
+        img_url = body.get("img_url", "")
+        if img_url:  # only validate if non-empty
+            try:
+                parsed = urlparse(img_url)
+                if not all([parsed.scheme, parsed.netloc]):
+                    return func.HttpResponse(
+                        body=json.dumps({"error": "img_url must be a valid URL or empty."}),
+                        status_code=400
+                    )
+            except:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "img_url must be a valid URL or empty."}),
+                    status_code=400
+                )
+
+        # ---- 5) Check that the creator_id (user_id) is valid AND authorized  ----
+        user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
+        user_params = [{"name": "@u_id", "value": body["user_id"]}]
+        user_items = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+        if not user_items:
+            return func.HttpResponse(
+                body=json.dumps({"error": f"User '{body['user_id']}' not found in the users database."}),
+                status_code=400
+            )
+
+        # ---5.5) Check user.auth == True
+        user_doc = user_items[0]
+        if not user_doc.get("auth", False):
+            return func.HttpResponse(
+                body=json.dumps({"error": f"User '{body['user_id']}' is not authorized to create events."}),
+                status_code=403  # 403 Forbidden
+            )
+
+        # ---- 6) Check that name and desc are strings  ----
+        if not isinstance(body["name"], str):
+            return func.HttpResponse(
+                body=json.dumps({"error": "Event name must be a string."}),
+                status_code=400
+            )
+        if not isinstance(body["desc"], str):
+            return func.HttpResponse(
+                body=json.dumps({"error": "Event description must be a string."}),
+                status_code=400
+            )
+
+        # ---- 7) Check type always passes for now (Placeholder)  ----
+        # For future expansions, e.g. if you have accepted_types = ["lecture", "society", ...]
+        # if body["type"] not in accepted_types:
+        #    return func.HttpResponse(...)
+
+        # ---- Build the event_doc after passing validations ----
+        event_id = str(uuid.uuid4())
         event_doc = {
             "event_id": event_id,
-            "creator_id": [body["user_id"]],  # store the single user as an array
+            "creator_id": [body["user_id"]],
             "name": body["name"],
             "type": body["type"],
             "desc": body["desc"],
             "location_id": body["location_id"],
-            "start_date": body["start_date"],  
+            "start_date": body["start_date"],
             "end_date": body["end_date"],
             "max_tick": body["max_tick"],
             "max_tick_pp": body["max_tick_pp"],
-            # optional
             "tags": body.get("tags", []),
-            "img_url": body.get("img_url", "")
+            "img_url": img_url
         }
 
-        # Validate with JSON schema
+        # ---- JSON Schema validation ----
         jsonschema.validate(instance=event_doc, schema=EVENT_SCHEMA)
 
-        # Insert into Cosmos DB
+        # ---- Insert into Cosmos DB ----
         EventsContainerProxy.create_item(event_doc)
 
         return func.HttpResponse(
             body=json.dumps({"result": "success", "event_id": event_id}),
             status_code=201
         )
+
     except jsonschema.exceptions.ValidationError as e:
         return func.HttpResponse(
-            body=json.dumps({"error": f"Validation error: {str(e)}"}),
+            body=json.dumps({"error": f"JSON schema validation error: {str(e)}"}),
             status_code=400
         )
     except Exception as e:
@@ -206,12 +309,21 @@ def get_event(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="update_event", auth_level=func.AuthLevel.FUNCTION, methods=['PUT', 'POST'])
 def update_event(req: func.HttpRequest) -> func.HttpResponse:
     """
-    UPDATE an event by event_id, only if the user_id matches the creator_id.
+    UPDATE an event by event_id, only if the user_id is in creator_id array.
     Input:
       - event_id (string)
       - user_id  (string)
       - fields to update:
           name, type, desc, location_id, start_date, end_date, max_tick, max_tick_pp, tags, img_url
+    Validations:
+      1) start_date < end_date (datetime parse)
+      2) max_tick, max_tick_pp > 0
+      3) location_id not null & in DB
+      4) img_url is a valid URL or can be empty
+      5) creator_id (user_id) must exist in users partition
+      6) name & desc must be strings
+      7) type check (always passes for now)
+      8) user.auth == True
     """
     try:
         body = req.get_json()
@@ -224,7 +336,7 @@ def update_event(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=400
             )
 
-        # Get existing event
+        # 1) Retrieve existing event
         query = "SELECT * FROM c WHERE c.event_id = @event_id"
         params = [{"name": "@event_id", "value": event_id}]
         items = list(EventsContainerProxy.query_items(
@@ -241,32 +353,142 @@ def update_event(req: func.HttpRequest) -> func.HttpResponse:
 
         event_doc = items[0]
 
-        # Check user ownership
+        # 2) Check user ownership 
         if user_id not in event_doc["creator_id"]:
             return func.HttpResponse(
                 body=json.dumps({"error": "Unauthorized: You are not the creator of this event."}),
                 status_code=403
             )
 
-        # Update only the fields provided
+        # 3) Ensure the user is valid & authorized (user.auth == True)
+        user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
+        user_params = [{"name": "@u_id", "value": user_id}]
+        user_items = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+        if not user_items:
+            return func.HttpResponse(
+                body=json.dumps({"error": f"User '{user_id}' not found in users database."}),
+                status_code=400
+            )
+
+        user_doc = user_items[0]
+        if not user_doc.get("auth", False):
+            return func.HttpResponse(
+                body=json.dumps({"error": f"User '{user_id}' is not authorized to update events."}),
+                status_code=403
+            )
+
+        # 4) Update only the fields provided
         updatable_fields = [
-            "name", "type", "desc", "location_id", "start_date", 
+            "name", "type", "desc", "location_id", "start_date",
             "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
         ]
         for field in updatable_fields:
             if field in body:
                 event_doc[field] = body[field]
 
-        # Validate updated doc
+        # 5) Now perform the validations on the updated doc
+
+        # (i) start_date < end_date
+        if "start_date" in event_doc and "end_date" in event_doc:
+            try:
+                start_dt = parser.isoparse(event_doc["start_date"])
+                end_dt = parser.isoparse(event_doc["end_date"])
+            except ValueError:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Invalid date format. Use ISO 8601 (yyyy-MM-ddTHH:mm:ss.fffffffZ)."}),
+                    status_code=400
+                )
+            if start_dt >= end_dt:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Start date must be strictly before end date."}),
+                    status_code=400
+                )
+
+        # (ii) max_tick and max_tick_pp > 0
+        if "max_tick" in event_doc:
+            if event_doc["max_tick"] <= 0:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "max_tick must be greater than 0."}),
+                    status_code=400
+                )
+        if "max_tick_pp" in event_doc:
+            if event_doc["max_tick_pp"] <= 0:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "max_tick_pp must be greater than 0."}),
+                    status_code=400
+                )
+
+        # (iii) location_id not null & in DB
+        if "location_id" in event_doc:
+            if not event_doc["location_id"]:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "location_id cannot be null or empty."}),
+                    status_code=400
+                )
+            loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+            loc_params = [{"name": "@loc_id", "value": event_doc["location_id"]}]
+            loc_items = list(LocationsContainerProxy.query_items(
+                query=loc_query,
+                parameters=loc_params,
+                enable_cross_partition_query=True
+            ))
+            if not loc_items:
+                return func.HttpResponse(
+                    body=json.dumps({"error": f"Location '{event_doc['location_id']}' not found in DB."}),
+                    status_code=400
+                )
+
+        # (iv) img_url is a valid URL or empty
+        if "img_url" in event_doc:
+            img_url = event_doc["img_url"]
+            if img_url:  # if not empty
+                try:
+                    parsed = urlparse(img_url)
+                    if not all([parsed.scheme, parsed.netloc]):
+                        return func.HttpResponse(
+                            body=json.dumps({"error": "img_url must be a valid URL or empty."}),
+                            status_code=400
+                        )
+                except:
+                    return func.HttpResponse(
+                        body=json.dumps({"error": "img_url must be a valid URL or empty."}),
+                        status_code=400
+                    )
+
+        # (v) name & desc must be strings
+        if "name" in event_doc:
+            if not isinstance(event_doc["name"], str):
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Event name must be a string."}),
+                    status_code=400
+                )
+        if "desc" in event_doc:
+            if not isinstance(event_doc["desc"], str):
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Event description must be a string."}),
+                    status_code=400
+                )
+
+        # (vi) type check (always pass for now)
+        # If you had accepted_types = [...], you'd do:
+        # if event_doc["type"] not in accepted_types:
+        #   return func.HttpResponse(...)
+
+        # 6) Validate updated doc with JSON schema
         jsonschema.validate(instance=event_doc, schema=EVENT_SCHEMA)
 
-        # Upsert (replace) the updated document
+        # 7) Replace (upsert) the updated document in DB
         EventsContainerProxy.replace_item(item=event_doc, body=event_doc)
 
         return func.HttpResponse(
             body=json.dumps({"result": "success"}),
             status_code=200
         )
+
     except jsonschema.exceptions.ValidationError as e:
         return func.HttpResponse(
             body=json.dumps({"error": f"Validation error: {str(e)}"}),
