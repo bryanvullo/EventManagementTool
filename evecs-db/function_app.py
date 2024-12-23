@@ -79,7 +79,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
             valid = True
             break
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(f"Error: {e.message}")
+            logging.error(f"Error: {e.message}")    
 
     if not valid:
         return func.HttpResponse(
@@ -302,8 +302,11 @@ def delete_ticket(req: func.HttpRequest) -> func.HttpResponse:
 # -------------------------
 # EVENT CRUD ENDPOINTS
 # NOTE: The actual code is contained in the shared_code/events_crud folder.
-# NOTE: The lists valid_tags and valid_types determine validation ourcomes. Edit these lists to change validation.
-# -------------------------
+# NOTE: In events_crud.py valid_tags and valid_types store  placeholders for event tags and types.
+
+#--------------------------
+# TODO: This function should also create max_tick and populate the tickets container
+# TODO: Should also add the event to locations - locations needed for this
 @app.route(route="create_event", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     result = create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy)

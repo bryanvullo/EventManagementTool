@@ -99,7 +99,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "status_code": 400,
                     "body": {"error": "img_url must be a valid URL or empty."}
                 }
-
+        
         # ---- 5) Check that the creator_id (user_id) is valid AND authorized  ----
         user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
         user_params = [{"name": "@u_id", "value": body["user_id"]}]
