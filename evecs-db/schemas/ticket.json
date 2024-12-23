@@ -1,6 +1,6 @@
 {
     "bsonType": "object",
-    "required": ["ticket_id", "user_id", "email"],
+    "required": ["ticket_id", "user_id", "event_id", "email"],
     "properties": {
       "ticket_id": {
         "bsonType": "string",
@@ -9,6 +9,10 @@
       "user_id": {
         "bsonType": "string",
         "description": "Identifier of the user who owns the ticket."
+      },
+      "event_id": {
+        "bsonType": "string",
+        "description": "Identifier of the event this ticket is for."
       },
       "email": {
         "bsonType": "string",
