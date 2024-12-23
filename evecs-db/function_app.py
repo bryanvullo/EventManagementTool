@@ -95,7 +95,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Creates a new ticket document in the tickets container.
-    We auto-generate the ticket_id (and thus the Cosmos DB 'id').
+    We auto-generate the ticket_id (and so the Cosmos DB 'id').
     The request body must contain other required fields (e.g., user_id, email, event_id).
     
     Returns a status message on success/failure.
@@ -105,7 +105,7 @@ def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
         # Parse JSON from request
         data = req.get_json()
 
-        # Generate a new ticket_id (UUID) and assign to data
+        # Generate a new ticket_id and assign to data
         new_ticket_id = str(uuid.uuid4())
         data["ticket_id"] = new_ticket_id
         data["id"] = new_ticket_id  # 'id' must match the partition key for direct reads in Cosmos
@@ -221,8 +221,8 @@ def get_ticket(req: func.HttpRequest) -> func.HttpResponse:
 )
 def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Updates (replaces) a ticket document with the new data.
-    Must provide valid JSON that passes schema validation.
+    Updates a ticket with the new data.
+    Must provide valid JSON that matches ticket schema.
     The ticket_id in the route is used for the partition key.
     """
     try:
