@@ -95,12 +95,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 #############################
 #     CREATE A NEW TICKET   #
 #############################
-@app.function_name(name="create_ticket")
-@app.route(
-    route="ticket/create",
-    auth_level=func.AuthLevel.FUNCTION,
-    methods=['POST']
-)
+@app.route(route="ticket/create", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Creates a new ticket document in the tickets container.
@@ -150,12 +145,7 @@ def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
 #############################
 #  READ ALL TICKETS (LIST)  #
 #############################
-@app.function_name(name="get_all_tickets")
-@app.route(
-    route="ticket/readAll",
-    auth_level=func.AuthLevel.FUNCTION,
-    methods=['GET']
-)
+@app.route(route="ticket/readAll", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
 def get_all_tickets(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieves all tickets from the tickets container.
@@ -178,12 +168,7 @@ def get_all_tickets(req: func.HttpRequest) -> func.HttpResponse:
 #############################
 #     READ ONE TICKET       #
 #############################
-@app.function_name(name="get_ticket")
-@app.route(
-    route="ticket/read/{ticket_id}",
-    auth_level=func.AuthLevel.FUNCTION,
-    methods=['GET']
-)
+@app.route(route="ticket/read/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
 def get_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieves a single ticket by its ticket_id using direct read_item,
@@ -220,12 +205,7 @@ def get_ticket(req: func.HttpRequest) -> func.HttpResponse:
 #############################
 #       UPDATE TICKET       #
 #############################
-@app.function_name(name="update_ticket")
-@app.route(
-    route="ticket/update/{ticket_id}",
-    auth_level=func.AuthLevel.FUNCTION,
-    methods=['PUT']
-)
+@app.route(route="ticket/update/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['PUT'])
 def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Updates a ticket with the new data.
@@ -289,12 +269,7 @@ def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
 #############################
 #      DELETE TICKET        #
 #############################
-@app.function_name(name="delete_ticket")
-@app.route(
-    route="ticket/delete/{ticket_id}",
-    auth_level=func.AuthLevel.FUNCTION,
-    methods=['DELETE']
-)
+@app.route(route="ticket/delete/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['DELETE'])
 def delete_ticket(req: func.HttpRequest) -> func.HttpResponse:
     """
     Deletes a ticket document by its ticket_id.
