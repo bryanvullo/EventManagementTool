@@ -6,6 +6,24 @@
 # |   3. create tickets and test that they are added to tickets partition
 # |   4. test that a created event is added to the locations partition
 
+#--------------------------------------SETUP----------------------------------------
+import unittest
+import uuid
+import os
+import requests
+import json
+from azure.cosmos import CosmosClient, exceptions
+from datetime import datetime, timedelta
+from dateutil import tz
+
+settings_file = os.path.join(os.path.dirname(__file__), '..', 'local.settings.json')
+with open(settings_file) as f:
+    settings = json.load(f).get('Values', {})
+
+for key, value in settings.items():
+    os.environ[key] = value
+
+
 #----------------------------------TEST DOCS----------------------------------------
 
 mock_user_doc_auth_true = {
@@ -33,15 +51,6 @@ mock_location_doc = {
 }
 
 #---------------------------------------TESTS----------------------------------------- 
-
-import unittest
-import uuid
-import os
-import requests
-import json
-from azure.cosmos import CosmosClient, exceptions
-from datetime import datetime, timedelta
-from dateutil import tz
 
 
 def isoformat_now_plus(days_offset=0):
@@ -102,7 +111,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         cls.users_container.create_item(cls.user_doc)
 
         # 5) Base URL for your local Function App
-        cls.base_url = "http://localhost:7071/api"
+        cls.base_url = "http://localhost:7071"
 
     @classmethod
     def tearDownClass(cls):
