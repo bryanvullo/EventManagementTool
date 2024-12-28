@@ -12,9 +12,11 @@ import uuid
 import os
 import requests
 import json
+import jsonschema
 from azure.cosmos import CosmosClient, exceptions
 from datetime import datetime, timedelta
 from dateutil import tz
+from jsonschema.exceptions import ValidationError, SchemaError
 
 settings_file = os.path.join(os.path.dirname(__file__), '..', 'local.settings.json')
 with open(settings_file) as f:
@@ -51,17 +53,13 @@ mock_location_doc = {
 }
 
 #---------------------------------------TESTS----------------------------------------- 
-
-
 def isoformat_now_plus(days_offset=0):
     """
-    Return a string in the format yyyy-MM-ddTHH:mm:ss.fffffffZ
-    days_offset can be positive or negative to shift the date accordingly.
+    Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
+    (up to 6 fractional digits), always in UTC.
     """
-    dt = datetime.now(tz.UTC) + timedelta(days=days_offset)
-    # Example format: 2024-01-01T12:34:56.1234567Z
-    return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-
+    dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
+    return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 class TestIntegrationCreateEvent(unittest.TestCase):
 
@@ -113,6 +111,9 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         # 5) Base URL for your local Function App
         cls.base_url = "http://localhost:7071"
 
+        # 6) Event schema path
+        cls.schema_path = os.path.join(os.path.dirname(__file__), '..', 'schemas', 'event.json')
+
     @classmethod
     def tearDownClass(cls):
         """
@@ -140,8 +141,8 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             print(f"Error cleaning up user doc: {e}")
 
     # ----------------------------------------------------------------
-    # 1. Test that DB/partition connections work (conceptual check).
-    #    We do a simple query on each container to ensure no exceptions.
+    # 1. Test that DB/partition connections work.
+    #    query on each container to ensure no exceptions.
     # ----------------------------------------------------------------
     def test_db_connection_check(self):
         try:
@@ -153,46 +154,58 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         except Exception as e:
             self.fail(f"Database connection check failed: {e}")
 
-    # ----------------------------------------------------------------
-    # 2. Test proper event object creation and confirm presence in DB.
-    # ----------------------------------------------------------------
-    def test_proper_event_object_creation(self):
-        endpoint_url = f"{self.base_url}/create_event"
+    
+    def test_events_schema(self):
+        """
+        Test that the 'event.json' file itself is valid JSON Schema (draft-07).
+        """
+        with open(self.schema_path, 'r') as f:
+            schema = json.load(f)
+
+        try:
+            jsonschema.Draft7Validator.check_schema(schema)
+        except SchemaError as e:
+            print("Schema Error:", e)
+            self.fail("Schema is not valid JSON Schema (draft-07)!")
+        except Exception as e:
+            self.fail(f"Unexpected error checking schema: {e}")
+
+        # If we get here, schema is valid
+        print("Schema passes draft-07 check!")
+
+    def test_created_event_validation(self):
+        """
+        Test that a properly formed event document
+        actually validates against 'event.json'.
+        """
+        with open(self.schema_path, 'r') as f:
+            schema = json.load(f)
+
         valid_body = {
-            "user_id": self.user_id,
+            "event_id": str(uuid.uuid4()),         # required
+            "creator_id": ["creator_123"],         # array of strings
             "name": "Integration Test Event",
             "type": "lecture",
-            "desc": "This is a valid event.",
-            "location_id": self.location_id,
-            "start_date": isoformat_now_plus(1),  # tomorrow
-            "end_date": isoformat_now_plus(2),    # day after tomorrow
+            "desc": "This is a valid event document.",
+            "location_id": "loc_456",
+            "start_date": isoformat_now_plus(1),   # Tomorrow
+            "end_date": isoformat_now_plus(2),     # Day after tomorrow
             "max_tick": 100,
             "max_tick_pp": 5,
-            "tags": ["lecture", "society"],
-            "img_url": "https://example.com/image.png"
+            "img_url": "https://example.com/image.png",
+            "tags": ["lecture", "society"]        
         }
-        resp = requests.post(endpoint_url, json=valid_body)
-        self.assertIn(resp.status_code, [200, 201])  # Your code returns 201 on success
 
-        data = resp.json()
-        self.assertIn("event_id", data)
-        event_id = data["event_id"]
-
-        # Double-check the event was created in DB
-        # The partition key is presumably the same as event_id
         try:
-            event_doc = self.events_container.read_item(
-                item=event_id,
-                partition_key=event_id
-            )
-            self.assertIsNotNone(event_doc)
-            # Optional: confirm some fields
-            self.assertEqual(event_doc["name"], valid_body["name"])
-        except exceptions.CosmosResourceNotFoundError:
-            self.fail("Event not found in DB after creation.")
-
-        # Cleanup: remove the event doc from DB
-        self._delete_event_in_db(event_id)
+            # Validate against the event schema
+            jsonschema.validate(instance=valid_body, schema=schema)
+            print("Valid event document passes schema validation!")
+        except ValidationError as e:
+            print("Validation Error:", e)
+            self.fail("Document should be valid but failed validation!")
+        except Exception as e:
+            print("Unexpected Error:", e)
+            self.fail("Unexpected error when validating document!")
 
     # ----------------------------------------------------------------
     # 3. Systematically test incorrect formatting & constraints
@@ -378,6 +391,8 @@ class TestIntegrationCreateEvent(unittest.TestCase):
     def test_correctly_formatted_event_with_optional_fields(self):
         endpoint_url = f"{self.base_url}/create_event"
         body = {
+            "event_id": str(uuid.uuid4()),
+            "creator_id": ["creator_123"],         
             "user_id": self.user_id,
             "name": "Event with optional fields",
             "type": "lecture",
@@ -390,7 +405,9 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "tags": ["lecture", "music"],
             "img_url": "https://example.com/event.png"
         }
+        print("TEST-BODY: ", body, "\n")
         resp = requests.post(endpoint_url, json=body)
+        print("TEST-RESP: ", resp, "\n")
         self.assertIn(resp.status_code, [200, 201])
         data = resp.json()
         self.assertEqual(data["result"], "success")

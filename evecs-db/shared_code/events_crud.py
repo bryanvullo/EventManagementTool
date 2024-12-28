@@ -4,6 +4,8 @@ import logging
 import json
 import jsonschema
 import uuid
+import os
+import console
 from dateutil import parser
 from urllib.parse import urlparse
 
@@ -13,7 +15,9 @@ valid_types = {"lecture", "society", "sports", "concert"}          # Example
 
 def load_event_schema():
     # Load event schema for validation, if needed for multiple functions
-    with open('schemas/event.json', 'r') as f:
+    events_schema = os.path.join(os.path.dirname(__file__), '..', 'schemas\event.json')
+    with open(events_schema) as f:
+        print(f" TEST-ESCHEMA: Loading event schema from {events_schema}")
         return json.load(f)
 
 EVENT_SCHEMA = load_event_schema()
@@ -171,6 +175,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "location_id": body["location_id"],
             "start_date": body["start_date"],
             "end_date": body["end_date"],
+            
             "max_tick": body["max_tick"],
             "max_tick_pp": body["max_tick_pp"],
             "tags": body.get("tags", []),
@@ -195,6 +200,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         }
     except Exception as e:
         logging.error(f"Error creating event: {str(e)}")
+        logging.error(console.get_stacktrace())
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
