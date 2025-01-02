@@ -16,7 +16,9 @@ from openai import AzureOpenAI
 
 # Import event_crud functions
 # Import login_crud functions
+# Import ticket_crud functions
 from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar)
+from shared_code.ticket_crud import (create_ticket, get_ticket, get_tickets, update_ticket, delete_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user)
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
@@ -92,212 +94,256 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200
     )
 
-#############################
-#     CREATE A NEW TICKET   #
-#############################
-@app.route(route="ticket/create", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
-def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Creates a new ticket document in the tickets container.
-    We auto-generate the ticket_id (and so the Cosmos DB 'id').
-    The request body must contain other required fields (e.g., user_id, email, event_id).
+# #############################
+# #     CREATE A NEW TICKET   #
+# #############################
+# @app.route(route="ticket/create", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
+# def create_ticket(req: func.HttpRequest) -> func.HttpResponse:
+#     """
+#     Creates a new ticket document in the tickets container.
+#     We auto-generate the ticket_id (and so the Cosmos DB 'id').
+#     The request body must contain other required fields (e.g., user_id, email, event_id).
     
-    Returns a status message on success/failure.
-    Partition key is ticket_id.
-    """
-    try:
-        # Parse JSON from request
-        data = req.get_json()
-        new_ticket_id = str(uuid.uuid4())
-        data["ticket_id"] = new_ticket_id
-        data["id"] = new_ticket_id  # 'id' must match the partition key for direct reads in Cosmos
+#     Returns a status message on success/failure.
+#     Partition key is ticket_id.
+#     """
+#     try:
+#         # Parse JSON from request
+#         data = req.get_json()
+#         new_ticket_id = str(uuid.uuid4())
+#         data["ticket_id"] = new_ticket_id
+#         data["id"] = new_ticket_id  # 'id' must match the partition key for direct reads in Cosmos
 
-        # Load and validate against ticket schema
-        with open('schemas/ticket.json', 'r') as f:
-            schema = json.load(f)
-        jsonschema.validate(instance=data, schema=schema)
+#         # Load and validate against ticket schema
+#         with open('schemas/ticket.json', 'r') as f:
+#             schema = json.load(f)
+#         jsonschema.validate(instance=data, schema=schema)
 
-        # Create item in Cosmos DB
-        TicketsContainerProxy.create_item(data)
+#         # Create item in Cosmos DB
+#         TicketsContainerProxy.create_item(data)
 
-        return func.HttpResponse(
-            status_code=200,
-            body=json.dumps({"message": "Ticket created successfully.", "ticket_id": new_ticket_id})
-        )
-    except json.JSONDecodeError:
-        return func.HttpResponse(
-            status_code=400,
-            body=json.dumps({"error": "Invalid JSON in request body."})
-        )
-    except jsonschema.ValidationError as ve:
-        return func.HttpResponse(
-            status_code=400,
-            body=json.dumps({"error": f"Schema validation error: {ve.message}"})
-        )
-    except Exception as e:
-        logging.error(f"Error creating ticket: {str(e)}")
-        return func.HttpResponse(
-            status_code=500,
-            body=json.dumps({"error": f"Failed to create ticket: {str(e)}"})
-        )
-
-
-#############################
-#  READ ALL TICKETS (LIST)  #
-#############################
-@app.route(route="ticket/readAll", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
-def get_all_tickets(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Retrieves all tickets from the tickets container.
-    Returns them as a JSON array.
-    """
-    try:
-        tickets = list(TicketsContainerProxy.read_all_items())
-        return func.HttpResponse(
-            status_code=200,
-            body=json.dumps(tickets, default=str)
-        )
-    except Exception as e:
-        logging.error(f"Error retrieving all tickets: {str(e)}")
-        return func.HttpResponse(
-            status_code=500,
-            body=json.dumps({"error": f"Failed to retrieve all tickets: {str(e)}"})
-        )
+#         return func.HttpResponse(
+#             status_code=200,
+#             body=json.dumps({"message": "Ticket created successfully.", "ticket_id": new_ticket_id})
+#         )
+#     except json.JSONDecodeError:
+#         return func.HttpResponse(
+#             status_code=400,
+#             body=json.dumps({"error": "Invalid JSON in request body."})
+#         )
+#     except jsonschema.ValidationError as ve:
+#         return func.HttpResponse(
+#             status_code=400,
+#             body=json.dumps({"error": f"Schema validation error: {ve.message}"})
+#         )
+#     except Exception as e:
+#         logging.error(f"Error creating ticket: {str(e)}")
+#         return func.HttpResponse(
+#             status_code=500,
+#             body=json.dumps({"error": f"Failed to create ticket: {str(e)}"})
+#         )
 
 
-#############################
-#     READ ONE TICKET       #
-#############################
-@app.route(route="ticket/read/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
-def get_ticket(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Retrieves a single ticket by its ticket_id using direct read_item,
-    because partition key is ticket_id and the id is also ticket_id.
-    """
-    try:
-        ticket_id = req.route_params.get('ticket_id')
-
-        # Direct read (most efficient in Cosmos)
-        ticket = TicketsContainerProxy.read_item(
-            item=ticket_id,
-            partition_key=ticket_id
-        )
-
-        return func.HttpResponse(
-            status_code=200,
-            body=json.dumps(ticket, default=str)
-        )
-
-    except cosmos_exceptions.CosmosResourceNotFoundError:
-        # If the item doesn't exist, read_item() will raise a 404 error
-        return func.HttpResponse(
-            status_code=404,
-            body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
-        )
-    except Exception as e:
-        logging.error(f"Error retrieving ticket: {str(e)}")
-        return func.HttpResponse(
-            status_code=500,
-            body=json.dumps({"error": f"Failed to retrieve ticket: {str(e)}"})
-        )
+# #############################
+# #  READ ALL TICKETS (LIST)  #
+# #############################
+# @app.route(route="ticket/readAll", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
+# def get_all_tickets(req: func.HttpRequest) -> func.HttpResponse:
+#     """
+#     Retrieves all tickets from the tickets container.
+#     Returns them as a JSON array.
+#     """
+#     try:
+#         tickets = list(TicketsContainerProxy.read_all_items())
+#         return func.HttpResponse(
+#             status_code=200,
+#             body=json.dumps(tickets, default=str)
+#         )
+#     except Exception as e:
+#         logging.error(f"Error retrieving all tickets: {str(e)}")
+#         return func.HttpResponse(
+#             status_code=500,
+#             body=json.dumps({"error": f"Failed to retrieve all tickets: {str(e)}"})
+#         )
 
 
-#############################
-#       UPDATE TICKET       #
-#############################
-@app.route(route="ticket/update/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['PUT'])
-def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Updates a ticket with the new data.
-    Must provide valid JSON that matches ticket schema.
-    The ticket_id in the route is used for the partition key.
-    """
-    try:
-        ticket_id = req.route_params.get('ticket_id')
-        new_data = req.get_json()
+# #############################
+# #     READ ONE TICKET       #
+# #############################
+# @app.route(route="ticket/read/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['GET'])
+# def get_ticket(req: func.HttpRequest) -> func.HttpResponse:
+#     """
+#     Retrieves a single ticket by its ticket_id using direct read_item,
+#     because partition key is ticket_id and the id is also ticket_id.
+#     """
+#     try:
+#         ticket_id = req.route_params.get('ticket_id')
 
-        # Validate the new data against the schema
-        with open('schemas/ticket.json', 'r') as f:
-            schema = json.load(f)
-        jsonschema.validate(instance=new_data, schema=schema)
+#         # Direct read (most efficient in Cosmos)
+#         ticket = TicketsContainerProxy.read_item(
+#             item=ticket_id,
+#             partition_key=ticket_id
+#         )
 
-        # Read the existing ticket to ensure it exists
-        existing_ticket = TicketsContainerProxy.read_item(
-            item=ticket_id,
-            partition_key=ticket_id
-        )
+#         return func.HttpResponse(
+#             status_code=200,
+#             body=json.dumps(ticket, default=str)
+#         )
 
-        # For a "replace" operation, we must keep the same 'id' and 'ticket_id'
-        # so that it remains the same document in Cosmos.
-        new_data["id"] = ticket_id
-        new_data["ticket_id"] = ticket_id
-
-        # Perform the replace
-        TicketsContainerProxy.replace_item(
-            item=existing_ticket,
-            body=new_data
-        )
-
-        return func.HttpResponse(
-            status_code=200,
-            body=json.dumps({"message": "Ticket updated successfully."})
-        )
-
-    except cosmos_exceptions.CosmosResourceNotFoundError:
-        return func.HttpResponse(
-            status_code=404,
-            body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
-        )
-    except json.JSONDecodeError:
-        return func.HttpResponse(
-            status_code=400,
-            body=json.dumps({"error": "Invalid JSON in request body."})
-        )
-    except jsonschema.ValidationError as ve:
-        return func.HttpResponse(
-            status_code=400,
-            body=json.dumps({"error": f"Schema validation error: {ve.message}"})
-        )
-    except Exception as e:
-        logging.error(f"Error updating ticket: {str(e)}")
-        return func.HttpResponse(
-            status_code=500,
-            body=json.dumps({"error": f"Failed to update ticket: {str(e)}"})
-        )
+#     except cosmos_exceptions.CosmosResourceNotFoundError:
+#         # If the item doesn't exist, read_item() will raise a 404 error
+#         return func.HttpResponse(
+#             status_code=404,
+#             body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
+#         )
+#     except Exception as e:
+#         logging.error(f"Error retrieving ticket: {str(e)}")
+#         return func.HttpResponse(
+#             status_code=500,
+#             body=json.dumps({"error": f"Failed to retrieve ticket: {str(e)}"})
+#         )
 
 
-#############################
-#      DELETE TICKET        #
-#############################
-@app.route(route="ticket/delete/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['DELETE'])
-def delete_ticket(req: func.HttpRequest) -> func.HttpResponse:
-    """
-    Deletes a ticket document by its ticket_id.
-    We do a direct delete_item with ticket_id (id) + ticket_id (partition_key).
-    """
-    try:
-        ticket_id = req.route_params.get('ticket_id')
+# #############################
+# #       UPDATE TICKET       #
+# #############################
+# @app.route(route="ticket/update/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['PUT'])
+# def update_ticket(req: func.HttpRequest) -> func.HttpResponse:
+#     """
+#     Updates a ticket with the new data.
+#     Must provide valid JSON that matches ticket schema.
+#     The ticket_id in the route is used for the partition key.
+#     """
+#     try:
+#         ticket_id = req.route_params.get('ticket_id')
+#         new_data = req.get_json()
 
-        TicketsContainerProxy.delete_item(
-            item=ticket_id,
-            partition_key=ticket_id
-        )
+#         # Validate the new data against the schema
+#         with open('schemas/ticket.json', 'r') as f:
+#             schema = json.load(f)
+#         jsonschema.validate(instance=new_data, schema=schema)
 
-        return func.HttpResponse(
-            status_code=200,
-            body=json.dumps({"message": "Ticket deleted successfully."})
-        )
-    except cosmos_exceptions.CosmosResourceNotFoundError:
-        return func.HttpResponse(
-            status_code=404,
-            body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
-        )
-    except Exception as e:
-        logging.error(f"Error deleting ticket: {str(e)}")
-        return func.HttpResponse(
-            status_code=500,
-            body=json.dumps({"error": f"Failed to delete ticket: {str(e)}"})
-        )
+#         # Read the existing ticket to ensure it exists
+#         existing_ticket = TicketsContainerProxy.read_item(
+#             item=ticket_id,
+#             partition_key=ticket_id
+#         )
+
+#         # For a "replace" operation, we must keep the same 'id' and 'ticket_id'
+#         # so that it remains the same document in Cosmos.
+#         new_data["id"] = ticket_id
+#         new_data["ticket_id"] = ticket_id
+
+#         # Perform the replace
+#         TicketsContainerProxy.replace_item(
+#             item=existing_ticket,
+#             body=new_data
+#         )
+
+#         return func.HttpResponse(
+#             status_code=200,
+#             body=json.dumps({"message": "Ticket updated successfully."})
+#         )
+
+#     except cosmos_exceptions.CosmosResourceNotFoundError:
+#         return func.HttpResponse(
+#             status_code=404,
+#             body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
+#         )
+#     except json.JSONDecodeError:
+#         return func.HttpResponse(
+#             status_code=400,
+#             body=json.dumps({"error": "Invalid JSON in request body."})
+#         )
+#     except jsonschema.ValidationError as ve:
+#         return func.HttpResponse(
+#             status_code=400,
+#             body=json.dumps({"error": f"Schema validation error: {ve.message}"})
+#         )
+#     except Exception as e:
+#         logging.error(f"Error updating ticket: {str(e)}")
+#         return func.HttpResponse(
+#             status_code=500,
+#             body=json.dumps({"error": f"Failed to update ticket: {str(e)}"})
+#         )
+
+
+# #############################
+# #      DELETE TICKET        #
+# #############################
+# @app.route(route="ticket/delete/{ticket_id}", auth_level=func.AuthLevel.FUNCTION, methods=['DELETE'])
+# def delete_ticket(req: func.HttpRequest) -> func.HttpResponse:
+#     """
+#     Deletes a ticket document by its ticket_id.
+#     We do a direct delete_item with ticket_id (id) + ticket_id (partition_key).
+#     """
+#     try:
+#         ticket_id = req.route_params.get('ticket_id')
+
+#         TicketsContainerProxy.delete_item(
+#             item=ticket_id,
+#             partition_key=ticket_id
+#         )
+
+#         return func.HttpResponse(
+#             status_code=200,
+#             body=json.dumps({"message": "Ticket deleted successfully."})
+#         )
+#     except cosmos_exceptions.CosmosResourceNotFoundError:
+#         return func.HttpResponse(
+#             status_code=404,
+#             body=json.dumps({"error": f"Ticket with ID '{ticket_id}' not found."})
+#         )
+#     except Exception as e:
+#         logging.error(f"Error deleting ticket: {str(e)}")
+#         return func.HttpResponse(
+#             status_code=500,
+#             body=json.dumps({"error": f"Failed to delete ticket: {str(e)}"})
+#         )
+
+# -------------------------
+# TICKET CRUD ENDPOINTS
+# NOTE: The actual code is contained in the shared_code/ticket_crud folder.
+# -------------------------
+@app.route(route="create_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
+def create_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = create_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
+
+@app.route(route="get_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
+def get_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = get_ticket(req, TicketsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
+
+@app.route(route="get_tickets", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
+def get_tickets_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = get_tickets(req, TicketsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    ) 
+
+@app.route(route="update_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
+def update_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
+
+@app.route(route="delete_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
+def delete_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = delete_ticket(req, TicketsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
 
 # -------------------------
 # EVENT CRUD ENDPOINTS
