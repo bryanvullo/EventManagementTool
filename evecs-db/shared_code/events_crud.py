@@ -16,7 +16,7 @@ valid_types = {"lecture", "society", "sports", "concert"}          # TBD
 
 # Load event schema for validation, if needed for multiple functions
 def load_event_schema():
-    events_schema = os.path.join(os.path.dirname(__file__), '..', 'schemas\event.json')
+    events_schema = os.path.join(os.path.dirname(__file__), '..', 'schemas/event.json')
     with open(events_schema) as f:
         print(f" TEST-ESCHEMA: Loading event schema from {events_schema}")
         return json.load(f)
