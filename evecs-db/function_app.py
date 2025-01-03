@@ -17,9 +17,11 @@ from openai import AzureOpenAI
 # Import event_crud functions
 # Import login_crud functions
 # Import ticket_crud functions
+# Import location_crud functions
 from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar)
 from shared_code.ticket_crud import (create_ticket, get_ticket, get_tickets, update_ticket, delete_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user)
+from shared_code.location_crud import (get_location_groups)
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -81,7 +83,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
             valid = True
             break
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(f"Error: {e.message}")    
+            logging.error(f"Error: {e.message}")
 
     if not valid:
         return func.HttpResponse(
@@ -93,6 +95,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
         body = json.dumps(eventJSON),
         status_code=200
     )
+
 
 # #############################
 # #     CREATE A NEW TICKET   #
@@ -348,11 +351,8 @@ def delete_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 # -------------------------
 # EVENT CRUD ENDPOINTS
 # NOTE: The actual code is contained in the shared_code/events_crud folder.
-# NOTE: In events_crud.py valid_tags and valid_types store  placeholders for event tags and types.
-
-#--------------------------
-# TODO: This function should also create max_tick and populate the tickets container
-# TODO: Should also add the event to locations - locations needed for this
+# NOTE: The lists valid_tags and valid_types determine validation ourcomes. Edit these lists to change validation.
+# -------------------------
 @app.route(route="create_event", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     result = create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy)
@@ -432,6 +432,18 @@ def update_user_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="delete_user", methods=['POST', 'DELETE'])
 def delete_user_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     result = delete_user(req, UsersContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
+
+# -------------------------
+# LOCATION CRUD ENDPOINTS
+# NOTE: The actual code is contained in the shared_code/location_crud folder.
+# -------------------------
+@app.route(route="get_location_groups", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
+def get_location_groups_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = get_location_groups(req, LocationsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
