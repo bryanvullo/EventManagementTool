@@ -4,17 +4,30 @@ import logging
 import json
 import jsonschema
 import uuid
-from dateutil import parser
+import os
+import traceback
+from datetime import timedelta, datetime
+from dateutil import parser, tz
 from urllib.parse import urlparse
 
 # Suppose we have the following global sets for validating tags/types:
-valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # Example
-valid_types = {"lecture", "society", "sports", "concert"}          # Example
+valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
+valid_types = {"lecture", "society", "sports", "concert"}          # TBD
 
+# Load event schema for validation, if needed for multiple functions
 def load_event_schema():
-    # Load event schema for validation, if needed for multiple functions
-    with open('schemas/event.json', 'r') as f:
+    events_schema = os.path.join(os.path.dirname(__file__), '..', 'schemas\event.json')
+    with open(events_schema) as f:
+        print(f" TEST-ESCHEMA: Loading event schema from {events_schema}")
         return json.load(f)
+
+def isoformat_now_plus(days_offset=0):
+    """
+    Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
+    (up to 6 fractional digits), always in UTC.
+    """
+    dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
+    return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 EVENT_SCHEMA = load_event_schema()
 
@@ -30,12 +43,16 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "user_id", "name", "type", "desc", "location_id",
             "start_date", "end_date", "max_tick", "max_tick_pp"
         ]
+        fields = []
         for field in mandatory_fields:
             if field not in body:
-                return {
-                    "status_code": 400,
-                    "body": {"error": f"Missing mandatory field: {field}"}
-                }
+                fields.append(field)
+        
+        if fields:
+            return {
+                "status_code": 400,
+                "body": {"error": f"Missing mandatory field(s): {fields}"}
+            }
 
         # ---- 1) start_date < end_date ----
         try:
@@ -99,7 +116,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "status_code": 400,
                     "body": {"error": "img_url must be a valid URL or empty."}
                 }
-
+        
         # ---- 5) Check that the creator_id (user_id) is valid AND authorized  ----
         user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
         user_params = [{"name": "@u_id", "value": body["user_id"]}]
@@ -164,7 +181,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         event_id = str(uuid.uuid4())
         event_doc = {
             "event_id": event_id,
-            "creator_id": [body["user_id"]],
+            "creator_id": [body["user_id"]], # maybe this?
             "name": body["name"],
             "type": body["type"],
             "desc": body["desc"],
@@ -193,8 +210,10 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "status_code": 400,
             "body": {"error": f"JSON schema validation error: {str(e)}"}
         }
+    
     except Exception as e:
-        logging.error(f"Error creating event: {str(e)}")
+        logging.error(f"Error creating event: {e}")
+        logging.error(traceback.format_exc())
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
