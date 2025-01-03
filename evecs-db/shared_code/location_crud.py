@@ -48,11 +48,21 @@ def get_location_groups(req, LocationsContainerProxy):
                 enable_cross_partition_query=True
             ))
 
+        # Transform the data into the required format
+        location_list = [{"location_id": loc["location_id"]} for loc in locations]
+        
+        # Collect all unique groups across all locations
+        all_groups = set()
+        for loc in locations:
+            if "groups" in loc and isinstance(loc["groups"], list):
+                all_groups.update(loc["groups"])
+
         return {
             "status_code": 200,
             "body": {
                 "message": "Successfully retrieved location groups",
-                "locations": locations
+                "locations": location_list,
+                "groups": sorted(list(all_groups))  # Convert set to sorted list
             }
         }
 
