@@ -109,7 +109,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         cls.users_container.create_item(cls.user_doc)
 
         # 5) Base URL for your local Function App
-        cls.base_url = "http://localhost:7071"
+        cls.base_url = "http://localhost:7071/api"
 
         # 6) Event schema path
         cls.schema_path = os.path.join(os.path.dirname(__file__), '..', 'schemas', 'event.json')
