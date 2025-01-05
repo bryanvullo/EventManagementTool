@@ -400,9 +400,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
     # 3.8. Properly formatted event object with optional fields
     def test_correctly_formatted_event_with_optional_fields(self):
         endpoint_url = "http://localhost:7071/api/create_event"
-        event_id = str(uuid.uuid4())
         body = {
-            "event_id": event_id,
             "user_id": self.user_id,
             "name": "Event with optional fields",
             "group": "lecture",
@@ -416,26 +414,46 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "img_url": "https://example.com/event.png"
         }
         print("TEST-BODY: ", body, "\n")
+
+        # POST to the endpoint
         resp = requests.post(endpoint_url, json=body)
-        #print(f"satus code: {resp.status_code}")
-        #print(f"response: {resp.json()}")
         self.assertIn(resp.status_code, [200, 201], f"Expected 200 or 201, got {resp.status_code}")
+
         data = resp.json()
         self.assertEqual(data["result"], "success")
-        self.assertIn("event_id", data)
 
-        # NOTE: This part of test fails maybe the read_item method has a problem
-        # Confirm it is in the DB
-        # try:
-        #     event_doc = self.events_container.find_item(event_id, partition_key=event_id)
-        #     print (f"Event doc: {event_doc}")
-        #     self.assertIsNotNone(event_doc)
-        #     self.assertEqual(event_doc["tags"], body["tags"])
-        # except exceptions.CosmosResourceNotFoundError:
-        #     self.fail("Event not found in DB after creation.")
+        # Here is the server-generated event_id
+        server_event_id = data["event_id"]  
+        self.assertTrue(server_event_id, "Returned event_id is empty.")
+
+        # Confirm it is in the DB using the server's event_id
+        try:
+            # 1) Build a SQL query to find the event by server_event_id
+            query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            params = [{"name": "@event_id", "value": server_event_id}]
+            
+            # 2) Execute the query
+            items = list(self.events_container.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+            
+            # 3) Check if any items were returned
+            if not items:
+                self.fail("Event not found in DB after creation.")
+            
+            # 4) Grab the first matching document
+            event_doc = items[0]
+            print(f"Event doc: {event_doc}")
+            self.assertIsNotNone(event_doc)
+            self.assertEqual(event_doc["tags"], body["tags"])
+        
+        except exceptions.CosmosHttpResponseError as e:
+            self.fail(f"An error occurred while querying the DB: {str(e)}")
 
         # Cleanup
-        self._delete_event_in_db(event_id)
+        self._delete_event_in_db(server_event_id)
 
     # ----------------------------------------------------------------
     # Helper Methods
