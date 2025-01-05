@@ -7,6 +7,7 @@
 # |   4. test that a created event is added to the locations partition
 
 #--------------------------------------SETUP----------------------------------------
+# test_event_crud.py
 import unittest
 import uuid
 import os
@@ -18,6 +19,7 @@ from datetime import datetime, timedelta
 from dateutil import tz
 from jsonschema.exceptions import ValidationError, SchemaError
 
+
 settings_file = os.path.join(os.path.dirname(__file__), '..', 'local.settings.json')
 with open(settings_file) as f:
     settings = json.load(f).get('Values', {})
@@ -25,9 +27,7 @@ with open(settings_file) as f:
 for key, value in settings.items():
     os.environ[key] = value
 
-
-#----------------------------------TEST DOCS----------------------------------------
-
+# ----------------------------------TEST DOCS----------------------------------------
 mock_user_doc_auth_true = {
     "user_id": "user_1234",
     "IP": "127.0.0.1",
@@ -45,14 +45,14 @@ mock_user_doc_auth_false = {
 }
 
 mock_location_doc = {
-    "id": "loc_1234", 
+    "id": "loc_1234",
     "location_id": "loc_1234",
     "location_name": "Main Hall",
     "capacity": 100,
     "events_ids": []
 }
 
-#---------------------------------------TESTS----------------------------------------- 
+# ---------------------------------------TESTS---------------------------------------
 def isoformat_now_plus(days_offset=0):
     """
     Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
@@ -88,8 +88,8 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         # 3) Insert a test location doc (for use in all tests)
         cls.location_id = f"loc_{uuid.uuid4()}"
         cls.location_doc = {
-            "id": cls.location_id,            # 'id' is the partition key
-            "location_id": cls.location_id,   # to match your schema
+            "id": cls.location_id,
+            "location_id": cls.location_id,
             "location_name": "Integration Test Location",
             "capacity": 500,
             "events_ids": []
@@ -99,7 +99,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         # 4) Insert a test user doc with auth=True
         cls.user_id = f"user_{uuid.uuid4()}"
         cls.user_doc = {
-            "id": cls.user_id,     # partition key
+            "id": cls.user_id,
             "user_id": cls.user_id,
             "IP": "127.0.0.1",
             "email": "authuser@example.com",
@@ -108,10 +108,13 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         cls.users_container.create_item(cls.user_doc)
 
-        # 5) Base URL for your local Function App
-        cls.base_url = "http://localhost:7071/api"
+        # 5) Base URL for your deployed Azure Function App (no trailing slash)
+        cls.base_url = "https://evecs.azurewebsites.net/api"
 
-        # 6) Event schema path
+        # 6) Load the function app key if needed (for Function-level auth)
+        cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
+
+        # 7) Event schema path
         cls.schema_path = os.path.join(os.path.dirname(__file__), '..', 'schemas', 'event.json')
 
     @classmethod
@@ -141,6 +144,16 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             print(f"Error cleaning up user doc: {e}")
 
     # ----------------------------------------------------------------
+    # Helper: Build URL with function key
+    # ----------------------------------------------------------------
+    def _get_create_event_url(self) -> str:
+        """
+        Returns the 'create_event' endpoint with the function key appended.
+        Example: https://evecs.azurewebsites.net/api/create_event?code=XYZ
+        """
+        return f"{self.base_url}/create_event?code={self.function_key}"
+
+    # ----------------------------------------------------------------
     # 1. Test that DB/partition connections work.
     #    query on each container to ensure no exceptions.
     # ----------------------------------------------------------------
@@ -154,7 +167,6 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         except Exception as e:
             self.fail(f"Database connection check failed: {e}")
 
-    
     def test_events_schema(self):
         """
         Test that the 'event.json' file itself is valid JSON Schema (draft-07).
@@ -193,7 +205,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick": 100,
             "max_tick_pp": 5,
             "img_url": "https://example.com/image.png",
-            "tags": ["lecture", "society"]        
+            "tags": ["lecture", "society"]
         }
 
         try:
@@ -209,13 +221,11 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
     # ----------------------------------------------------------------
     # 3. Systematically test incorrect formatting & constraints
-    #    We show representative tests; you can replicate for each
-    #    required field & scenario.
     # ----------------------------------------------------------------
 
     # 3.1. Check start_date < end_date
     def test_start_date_less_than_end_date(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         bad_body = {
             "user_id": self.user_id,
             "name": "Bad date event",
@@ -228,13 +238,13 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 2
         }
         resp = requests.post(endpoint_url, json=bad_body)
-        self.assertEqual(resp.status_code, 400)  # Or whatever your code returns for invalid
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         data = resp.json()
         self.assertIn("Start date must be strictly before end date", data["error"])
 
     # 3.2. max_tick and max_tick_pp must be > 0
     def test_max_tick_and_max_tick_pp_positive(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
 
         # max_tick = 0
         body_with_zero_tick = {
@@ -249,7 +259,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 1
         }
         resp = requests.post(endpoint_url, json=body_with_zero_tick)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("max_tick must be greater than 0", resp.json()["error"])
 
         # max_tick_pp = 0
@@ -265,12 +275,12 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 0
         }
         resp = requests.post(endpoint_url, json=body_with_zero_tick_pp)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("max_tick_pp must be greater than 0", resp.json()["error"])
 
     # 3.3. img_url must be a valid URL (or empty)
     def test_img_url_must_be_valid_or_empty(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body_invalid_url = {
             "user_id": self.user_id,
             "name": "Bad Img URL Event",
@@ -284,7 +294,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "img_url": "not a real url"
         }
         resp = requests.post(endpoint_url, json=body_invalid_url)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("img_url must be a valid URL or empty", resp.json()["error"])
 
     # 3.4. Check user.auth == True
@@ -304,7 +314,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         self.users_container.create_item(bad_user_doc)
 
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
             "user_id": bad_user_id,
             "name": "Unauthorized Event",
@@ -317,7 +327,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 1
         }
         resp = requests.post(endpoint_url, json=body)
-        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.status_code, 403, f"Expected 403, got {resp.status_code}")
         self.assertIn("is not authorized to create events", resp.json()["error"])
 
         # Clean up that user
@@ -325,7 +335,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
     # 3.5. name and desc must be strings
     def test_name_and_desc_must_be_strings(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
             "name": 12345,  # not a string
@@ -338,14 +348,14 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 5
         }
         resp = requests.post(endpoint_url, json=body)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         error_msg = resp.json()["error"]
         # The function checks name first, so we'll see that error
         self.assertIn("Event name must be a string", error_msg)
 
     # 3.6. type must be in valid_types
     def test_type_must_be_in_valid_types(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
             "name": "Bad Type",
@@ -358,12 +368,12 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "max_tick_pp": 5
         }
         resp = requests.post(endpoint_url, json=body)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("Invalid event type 'random_type'", resp.json()["error"])
 
     # 3.7. tags must be a list of valid tags
     def test_tags_must_be_valid(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
             "name": "Tags Test",
@@ -377,21 +387,20 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "tags": ["lecture", 123]  # 123 is not a string
         }
         resp = requests.post(endpoint_url, json=body)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("Each tag must be a string", resp.json()["error"])
 
         # Now test a string tag that isn't in valid_tags
         body["tags"] = ["lecture", "invalid_tag"]
         resp = requests.post(endpoint_url, json=body)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("Invalid tag 'invalid_tag'", resp.json()["error"])
 
     # 3.8. Properly formatted event object with optional fields
-    #      verifies it was actually created (similar to test_proper_event_object_creation).
     def test_correctly_formatted_event_with_optional_fields(self):
-        endpoint_url = f"{self.base_url}/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
-            "event_id": str(uuid.uuid4()),       
+            "event_id": str(uuid.uuid4()),
             "user_id": self.user_id,
             "name": "Event with optional fields",
             "type": "lecture",
@@ -407,9 +416,9 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         print("TEST-BODY: ", body, "\n")
         resp = requests.post(endpoint_url, json=body)
         print("TEST-RESP: ", resp, "\n")
-        self.assertIn(resp.status_code, [200, 201])
+        self.assertIn(resp.status_code, [200, 201], f"Expected 200 or 201, got {resp.status_code}")
         data = resp.json()
-        print ("TEST DATA: ", data, "\n")
+        print("TEST DATA: ", data, "\n")
         self.assertEqual(data["result"], "success")
         self.assertIn("event_id", data)
         event_id = data["event_id"]

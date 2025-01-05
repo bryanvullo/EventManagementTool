@@ -190,7 +190,6 @@ def make_calendar_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         status_code=result["status_code"]
     )
 
-
 # -------------------------
 # LOGIN/USER CRUD ENDPOINTS
 # -------------------------
