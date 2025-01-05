@@ -4,7 +4,7 @@
     "event_id",
     "creator_id",  
     "name",
-    "type",
+    "group",
     "desc",
     "location_id",
     "start_date",
@@ -29,9 +29,9 @@
       "type": "string",
       "description": "Name of the event."
     },
-    "type": {
+    "group": {
       "type": "string",
-      "description": "Indicates the type of event. (e.g. society, lecture, etc.)"
+      "description": "Indicates the group of event. (e.g. society, lecture module code, etc.)"
     },
     "tags": {
       "type": "array",
@@ -74,5 +74,5 @@
       "description": "URL of the event image."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
