@@ -10,9 +10,9 @@ from datetime import timedelta, datetime
 from dateutil import parser, tz
 from urllib.parse import urlparse
 
-# Suppose we have the following global sets for validating tags/types:
+# Suppose we have the following global sets for validating tags/groups:
 valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
-valid_types = {"lecture", "society", "sports", "concert"}          # TBD
+valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "lecture"}          # TBD
 
 # Load event schema for validation, if needed for multiple functions
 def load_event_schema():
@@ -40,7 +40,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # ---- 0) Check mandatory fields  ----
         mandatory_fields = [
-            "user_id", "name", "type", "desc", "location_id",
+            "user_id", "name", "group", "desc", "location_id",
             "start_date", "end_date", "max_tick", "max_tick_pp"
         ]
         fields = []
@@ -151,11 +151,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'type':
-        if body["type"] not in valid_types:
+        # ---- 7) check for 'group':
+        if body["group"] not in valid_groups:
             return {
                 "status_code": 400,
-                "body": {"error": f"Invalid event type '{body['type']}'. Must be one of {list(valid_types)}."}
+                "body": {"error": f"Invalid event group '{body['group']}'. Must be one of {list(valid_groups)}."}
             }
 
         # ---- 8) check for 'tags' (optional field):
@@ -178,6 +178,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     }
 
         # ---- Build the event_doc after passing validations ----
+        id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
         id = str(uuid.uuid4())
         event_doc = {
@@ -185,7 +186,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "event_id": event_id,
             "creator_id": [body["user_id"]], # maybe this?
             "name": body["name"],
-            "type": body["type"],
+            "group": body["group"],
             "desc": body["desc"],
             "location_id": body["location_id"],
             "start_date": body["start_date"],
@@ -272,12 +273,12 @@ def get_event(req, EventsContainerProxy):
                     "body": {"error": f"Event tag '{t}' is not in {list(valid_tags)}."}
                 }
 
-        # Validate type
-        event_type = event_doc.get("type")
-        if event_type not in valid_types:
+        # Validate group
+        event_group = event_doc.get("group")
+        if event_group not in valid_groups:
             return {
                 "status_code": 400,
-                "body": {"error": f"Event type '{event_type}' is not in {list(valid_types)}."}
+                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
             }
 
         return {
@@ -354,7 +355,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # 4) Update only the fields provided
         updatable_fields = [
-            "name", "type", "desc", "location_id", "start_date",
+            "name", "group", "desc", "location_id", "start_date",
             "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
         ]
         for field in updatable_fields:
@@ -444,12 +445,12 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "body": {"error": "Event description must be a string."}
                 }
 
-        # (vi) type check 
-        if "type" in event_doc:
-            if event_doc["type"] not in valid_types:
+        # (vi) group check 
+        if "group" in event_doc:
+            if event_doc["group"] not in valid_groups:
                 return {
                     "status_code": 400,
-                    "body": {"error": f"Invalid event type '{event_doc['type']}'. Must be one of {list(valid_types)}."}
+                    "body": {"error": f"Invalid event group '{event_doc['group']}'. Must be one of {list(valid_groups)}."}
                 }
         
         #(vii) # tags check
@@ -660,7 +661,7 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
         # ...
         # We'll do partial snippet here; same as your original.
 
-        # Validate filters like tags, type, desc, location_id, max_tick, max_tick_pp
+        # Validate filters like tags, group, desc, location_id, max_tick, max_tick_pp
         # (A) tags
         if "tags" in filters and filters["tags"]:
             if not isinstance(filters["tags"], list):
@@ -679,17 +680,17 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
                         "status_code": 400,
                         "body": {"error": f"Invalid tag '{t}'. Must be in {list(valid_tags)}."}
                     }
-        # (B) type in valid_types
-        if "type" in filters:
-            if not isinstance(filters["type"], str):
+        # (B) group in valid_groups
+        if "group" in filters:
+            if not isinstance(filters["group"], str):
                 return {
                     "status_code": 400,
-                    "body": {"error": "type must be a string."}
+                    "body": {"error": "group must be a string."}
                 }
-            if filters["type"] not in valid_types:
+            if filters["group"] not in valid_groups:
                 return {
                     "status_code": 400,
-                    "body": {"error": f"Invalid event type '{filters['type']}'. Allowed: {list(valid_types)}."}
+                    "body": {"error": f"Invalid event group '{filters['group']}'. Allowed: {list(valid_groups)}."}
                 }
 
         # (C) desc => must be a string
@@ -756,9 +757,9 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
             if "tags" in filters and filters["tags"]:
                 if ev_doc.get("tags", []) != filters["tags"]:
                     return False
-            # type => exact match
-            if "type" in filters:
-                if ev_doc.get("type") != filters["type"]:
+            # group => exact match
+            if "group" in filters:
+                if ev_doc.get("group") != filters["group"]:
                     return False
             # desc => substring
             if "desc" in filters:
