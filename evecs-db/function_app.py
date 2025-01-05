@@ -220,5 +220,3 @@ def get_location_groups_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
     )
-
-    
