@@ -19,7 +19,7 @@ from openai import AzureOpenAI
 # Import ticket_crud functions
 # Import location_crud functions
 from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar)
-from shared_code.ticket_crud import (create_ticket, get_ticket, get_tickets, update_ticket, delete_ticket)
+from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user)
 from shared_code.location_crud import (get_location_groups)
 
@@ -324,22 +324,6 @@ def get_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         status_code=result["status_code"]
     )
 
-@app.route(route="get_tickets", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
-def get_tickets_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = get_tickets(req, TicketsContainerProxy)
-    return func.HttpResponse(
-        body=json.dumps(result["body"]),
-        status_code=result["status_code"]
-    ) 
-
-@app.route(route="update_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
-def update_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy)
-    return func.HttpResponse(
-        body=json.dumps(result["body"]),
-        status_code=result["status_code"]
-    )
-
 @app.route(route="delete_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def delete_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     result = delete_ticket(req, TicketsContainerProxy)
@@ -448,3 +432,5 @@ def get_location_groups_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
     )
+
+    
