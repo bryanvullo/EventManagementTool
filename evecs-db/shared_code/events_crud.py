@@ -21,6 +21,8 @@ def load_event_schema():
         print(f" TEST-ESCHEMA: Loading event schema from {events_schema}")
         return json.load(f)
 
+EVENT_SCHEMA = load_event_schema()
+
 def isoformat_now_plus(days_offset=0):
     """
     Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
@@ -29,7 +31,7 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-EVENT_SCHEMA = load_event_schema()
+
 
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """

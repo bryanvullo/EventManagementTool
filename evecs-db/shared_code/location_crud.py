@@ -75,7 +75,7 @@ def get_location_groups(req, LocationsContainerProxy):
         }
 
 # Returns room details given a specified location_id
-def get_rooms_from_building(req, LocationsContainerProxy):
+def get_rooms_from_location_id(req, LocationsContainerProxy):
     """
     Given a location_id, return the list of rooms (and their properties) from that building.
     
