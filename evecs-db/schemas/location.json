@@ -1,63 +1,72 @@
 {
-  "bsonType": "object",
+  "type": "object",
   "required": [
     "location_id",
     "location_name",
     "events_ids",
-    "capacity",
     "rooms"
   ],
   "properties": {
     "location_id": {
-      "bsonType": "string",
+      "type": "string",
       "description": "Unique identifier for the location (partition key)."
     },
     "location_name": {
-      "bsonType": "string",
+      "type": "string",
       "description": "Name of the location."
     },
     "events_ids": {
-      "bsonType": "array",
-      "description": "List of event IDs associated with this location.",
+      "type": "array",
+      "description": "List of all event IDs associated with this BUILDING.",
       "items": {
-        "bsonType": "object",
+        "type": "object",
         "required": ["event_id"],
         "properties": {
           "event_id": {
-            "bsonType": "string",
+            "type": "string",
             "description": "Identifier of the event."
           }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
-    "capacity": {
-      "bsonType": "number",
-      "minimum": 0,
-      "description": "Overall building capacity or occupant limit."
-    },
     "rooms": {
-      "bsonType": "array",
+      "type": "array",
       "description": "List of available rooms for this location.",
       "items": {
-        "bsonType": "object",
-        "required": ["room_id", "room_name", "capacity"],
+        "type": "object",
+        "required": ["room_id", "room_name", "capacity", "event_id"],
         "properties": {
           "room_id": {
-            "bsonType": "string",
+            "type": "string",
             "description": "A unique identifier for the room."
           },
           "room_name": {
-            "bsonType": "string",
+            "type": "string",
             "description": "Room name or number."
           },
           "capacity": {
-            "bsonType": "number",
+            "type": "number",
             "minimum": 0,
             "description": "Seating or occupant capacity of the room."
           },
+          "events_ids": {
+            "type": "array",
+            "description": "List of all event IDs associated with this ROOM.",
+            "items": {
+              "type": "object",
+              "required": ["event_id"],
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "description": "Identifier of the event."
+                }
+              },
+              "additionalProperties": true
+            }
+          },
           "description": {
-            "bsonType": "string",
+            "type": "string",
             "description": "Optional brief description of the room."
           }
         },
@@ -65,5 +74,5 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }

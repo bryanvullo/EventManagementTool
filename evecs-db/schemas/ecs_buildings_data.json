@@ -20,20 +20,20 @@
       ]
     },
     {
-      "location_id": "B60",
-      "location_name": "Gower Building (B60)",
+      "location_id": "B100",
+      "location_name": "Centenary Building (B100)",
       "events_ids": [],
       "capacity": 1000,
       "rooms": [
         {
           "room_id": "2063",
-          "room_name": "Room 60/2063",
+          "room_name": "Room 100/2063",
           "capacity": 30,
           "description": "Meeting room with screen and whitebaord"
         },
         {
           "room_id": "1033",
-          "room_name": "Room 60/1033",
+          "room_name": "Room 100/1033",
           "capacity": 30,
           "description": "Meeting room with screen and whitebaord"
         }
@@ -60,20 +60,20 @@
       ]
     },
     {
-      "location_id": "B39",
+      "location_id": "B46",
       "location_name": "Soton Stat Sci Res Institute",
       "events_ids": [],
       "capacity": 800,
       "rooms": [
         {
           "room_id": "2023",
-          "room_name": "Room 39/2023",
+          "room_name": "Room 46/2023",
           "capacity": 40,
           "description": "Typical Room with movable seats, whiteboard and projection"
         },
         {
           "room_id": "3013",
-          "room_name": "Room 39/3013",
+          "room_name": "Room 46/3013",
           "capacity": 40,
           "description": "Typical Room with movable seats, whiteboard and projection"
         }
