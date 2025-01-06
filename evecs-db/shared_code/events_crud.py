@@ -41,7 +41,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # ---- 0) Check mandatory fields  ----
         mandatory_fields = [
             "user_id", "name", "group", "desc", "location_id",
-            "start_date", "end_date", "max_tick", "max_tick_pp"
+            "start_date", "end_date", "max_tick"
         ]
         fields = []
         for field in mandatory_fields:
@@ -69,16 +69,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Start date must be strictly before end date."}
             }
 
-        # ---- 2) max_tick and max_tick_pp must be > 0  ----
+        # ---- 2) max_tick and must be > 0  ----
         if body["max_tick"] <= 0:
             return {
                 "status_code": 400,
                 "body": {"error": "max_tick must be greater than 0."}
-            }
-        if body["max_tick_pp"] <= 0:
-            return {
-                "status_code": 400,
-                "body": {"error": "max_tick_pp must be greater than 0."}
             }
 
         # ---- 3) Check location_id is not null and exists in DB  ----
@@ -192,7 +187,6 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "start_date": body["start_date"],
             "end_date": body["end_date"],
             "max_tick": body["max_tick"],
-            "max_tick_pp": body["max_tick_pp"],
             "tags": body.get("tags", []),
             "img_url": img_url
         }
@@ -356,7 +350,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # 4) Update only the fields provided
         updatable_fields = [
             "name", "group", "desc", "location_id", "start_date",
-            "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
+            "end_date", "max_tick", "tags", "img_url"
         ]
         for field in updatable_fields:
             if field in body:
@@ -380,18 +374,12 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "body": {"error": "Start date must be strictly before end date."}
                 }
 
-        # (ii) max_tick and max_tick_pp > 0
+        # (ii) max_tick > 0
         if "max_tick" in event_doc:
             if event_doc["max_tick"] <= 0:
                 return {
                     "status_code": 400,
                     "body": {"error": "max_tick must be greater than 0."}
-                }
-        if "max_tick_pp" in event_doc:
-            if event_doc["max_tick_pp"] <= 0:
-                return {
-                    "status_code": 400,
-                    "body": {"error": "max_tick_pp must be greater than 0."}
                 }
 
         # (iii) location_id not null & in DB
@@ -661,7 +649,7 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
         # ...
         # We'll do partial snippet here; same as your original.
 
-        # Validate filters like tags, group, desc, location_id, max_tick, max_tick_pp
+        # Validate filters like tags, group, desc, location_id, max_tick
         # (A) tags
         if "tags" in filters and filters["tags"]:
             if not isinstance(filters["tags"], list):
@@ -721,18 +709,12 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
                     "body": {"error": f"location_id '{filters['location_id']}' not found in DB."}
                 }
 
-        # (E) max_tick, max_tick_pp => must be > 0
+        # (E) max_tick => must be > 0
         if "max_tick" in filters:
             if not isinstance(filters["max_tick"], (int, float)) or filters["max_tick"] <= 0:
                 return {
                     "status_code": 400,
                     "body": {"error": "max_tick must be a positive number."}
-                }
-        if "max_tick_pp" in filters:
-            if not isinstance(filters["max_tick_pp"], (int, float)) or filters["max_tick_pp"] <= 0:
-                return {
-                    "status_code": 400,
-                    "body": {"error": "max_tick_pp must be a positive number."}
                 }
 
         # Query events in date range
@@ -772,10 +754,6 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
             # max_tick
             if "max_tick" in filters:
                 if ev_doc.get("max_tick") != filters["max_tick"]:
-                    return False
-            # max_tick_pp
-            if "max_tick_pp" in filters:
-                if ev_doc.get("max_tick_pp") != filters["max_tick_pp"]:
                     return False
             return True
 
