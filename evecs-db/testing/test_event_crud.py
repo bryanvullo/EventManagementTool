@@ -152,7 +152,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         Returns the 'create_event' endpoint with the function key appended.
         Example: https://evecs.azurewebsites.net/api/create_event?code=XYZ
         """
-        return f"{self.base_url}/create_event"#?code={self.function_key}"
+        return f"{self.base_url}/create_event?code={self.function_key}"
 
     # ----------------------------------------------------------------
     # 1. Test that DB/partition connections work.
@@ -204,7 +204,6 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "start_date": isoformat_now_plus(1),   # Tomorrow
             "end_date": isoformat_now_plus(2),     # Day after tomorrow
             "max_tick": 100,
-            "max_tick_pp": 5,
             "img_url": "https://example.com/image.png",
             "tags": ["lecture", "society"]
         }
@@ -235,16 +234,15 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(2),  # +2 days
             "end_date": isoformat_now_plus(1),    # +1 day
-            "max_tick": 100,
-            "max_tick_pp": 2
+            "max_tick": 100
         }
         resp = requests.post(endpoint_url, json=bad_body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         data = resp.json()
         self.assertIn("Start date must be strictly before end date", data["error"])
 
-    # 3.2. max_tick and max_tick_pp must be > 0
-    def test_max_tick_and_max_tick_pp_positive(self):
+    # 3.2. max_tick > 0 
+    def test_max_tick_positive(self):
         endpoint_url = self._get_create_event_url()
 
         # max_tick = 0
@@ -256,8 +254,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 0,
-            "max_tick_pp": 1
+            "max_tick": 0
         }
         resp = requests.post(endpoint_url, json=body_with_zero_tick)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -267,7 +264,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body_with_zero_tick_pp = {
             "user_id": self.user_id,
             "name": "Zero Tick PP Event",
-            "group": "lecture",
+            "type": "lecture",
             "desc": "max_tick_pp is zero",
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(1),
@@ -291,7 +288,6 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 10,
-            "max_tick_pp": 2,
             "img_url": "not a real url"
         }
         resp = requests.post(endpoint_url, json=body_invalid_url)
@@ -324,8 +320,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10,
-            "max_tick_pp": 1
+            "max_tick": 10
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 403, f"Expected 403, got {resp.status_code}")
@@ -345,8 +340,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10,
-            "max_tick_pp": 5
+            "max_tick": 10
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -365,8 +359,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "location_id": self.location_id,
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10,
-            "max_tick_pp": 5
+            "max_tick": 10
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -384,7 +377,6 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 10,
-            "max_tick_pp": 5,
             "tags": ["lecture", 123]  # 123 is not a string
         }
         resp = requests.post(endpoint_url, json=body)
@@ -399,7 +391,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
     # 3.8. Properly formatted event object with optional fields
     def test_correctly_formatted_event_with_optional_fields(self):
-        endpoint_url = "http://localhost:7071/api/create_event"
+        endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
@@ -409,7 +401,6 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 20,
-            "max_tick_pp": 2,
             "tags": ["lecture", "music"],
             "img_url": "https://example.com/event.png"
         }

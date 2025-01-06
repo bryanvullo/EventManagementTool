@@ -21,6 +21,8 @@ def load_event_schema():
         print(f" TEST-ESCHEMA: Loading event schema from {events_schema}")
         return json.load(f)
 
+EVENT_SCHEMA = load_event_schema()
+
 def isoformat_now_plus(days_offset=0):
     """
     Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
@@ -29,29 +31,26 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-EVENT_SCHEMA = load_event_schema()
+
 
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
-    Original create_event logic, minus the @app.route decorator.
+    Create a new event, performing various business logic validations.
     """
     try:
         body = req.get_json()
 
         # ---- 0) Check mandatory fields  ----
         mandatory_fields = [
-            "user_id", "name", "group", "desc", "location_id",
+            "user_id", "name", "type", "desc", "location_id",
             "start_date", "end_date", "max_tick", "max_tick_pp"
         ]
-        fields = []
-        for field in mandatory_fields:
-            if field not in body:
-                fields.append(field)
-        
-        if fields:
+        missing_fields = [field for field in mandatory_fields if field not in body]
+
+        if missing_fields:
             return {
                 "status_code": 400,
-                "body": {"error": f"Missing mandatory field(s): {fields}"}
+                "body": {"error": f"Missing mandatory field(s): {missing_fields}"}
             }
 
         # ---- 1) start_date < end_date ----
@@ -69,27 +68,23 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Start date must be strictly before end date."}
             }
 
-        # ---- 2) max_tick and max_tick_pp must be > 0  ----
-        if body["max_tick"] <= 0:
+        # ---- 2) max_tick must be > 0  ----
+        if not isinstance(body["max_tick"], (int, float)) or body["max_tick"] <= 0:
             return {
                 "status_code": 400,
-                "body": {"error": "max_tick must be greater than 0."}
-            }
-        if body["max_tick_pp"] <= 0:
-            return {
-                "status_code": 400,
-                "body": {"error": "max_tick_pp must be greater than 0."}
+                "body": {"error": "max_tick must be a number greater than 0."}
             }
 
         # ---- 3) Check location_id is not null and exists in DB  ----
-        if not body["location_id"]:
+        location_id = body["location_id"]
+        if not location_id:
             return {
                 "status_code": 400,
                 "body": {"error": "location_id cannot be null or empty."}
             }
 
         loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
-        loc_params = [{"name": "@loc_id", "value": body["location_id"]}]
+        loc_params = [{"name": "@loc_id", "value": location_id}]
         loc_items = list(LocationsContainerProxy.query_items(
             query=loc_query,
             parameters=loc_params,
@@ -98,8 +93,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         if not loc_items:
             return {
                 "status_code": 400,
-                "body": {"error": f"Location '{body['location_id']}' not found in the database."}
+                "body": {"error": f"Location '{location_id}' not found in the database."}
             }
+
+        # We'll store the location doc for future updates
+        location_doc = loc_items[0]
 
         # ---- 4) Check img_url is a URL (or can be null/empty)  ----
         img_url = body.get("img_url", "")
@@ -116,10 +114,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "status_code": 400,
                     "body": {"error": "img_url must be a valid URL or empty."}
                 }
-        
+
         # ---- 5) Check that the creator_id (user_id) is valid AND authorized  ----
+        user_id = body["user_id"]
         user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
-        user_params = [{"name": "@u_id", "value": body["user_id"]}]
+        user_params = [{"name": "@u_id", "value": user_id}]
         user_items = list(UsersContainerProxy.query_items(
             query=user_query,
             parameters=user_params,
@@ -128,7 +127,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         if not user_items:
             return {
                 "status_code": 400,
-                "body": {"error": f"User '{body['user_id']}' not found in the users database."}
+                "body": {"error": f"User '{user_id}' not found in the users database."}
             }
 
         # ---5.5) Check user.auth == True
@@ -136,7 +135,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         if not user_doc.get("auth", False):
             return {
                 "status_code": 403,
-                "body": {"error": f"User '{body['user_id']}' is not authorized to create events."}
+                "body": {"error": f"User '{user_id}' is not authorized to create events."}
             }
 
         # ---- 6) Check that name and desc are strings  ----
@@ -151,14 +150,14 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'group':
-        if body["group"] not in valid_groups:
+        # ---- 7) check for 'type':
+        if body["type"] not in valid_types:
             return {
                 "status_code": 400,
-                "body": {"error": f"Invalid event group '{body['group']}'. Must be one of {list(valid_groups)}."}
+                "body": {"error": f"Invalid event type '{body['type']}'. Must be one of {list(valid_types)}."}
             }
 
-        # ---- 8) check for 'tags' (optional field):
+        # ---- 8) check for 'tags' (optional field) ----
         if "tags" in body and body["tags"]:
             if not isinstance(body["tags"], list):
                 return {
@@ -177,21 +176,43 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                         "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
                     }
 
+        # ---- 9) Check room_id exists in the location_doc ----
+        room_id = body["room_id"]
+
+        # Retrieve rooms from the location_doc
+        rooms = location_doc.get("rooms", [])
+        selected_room = next((room for room in rooms if room["room_id"] == room_id), None)
+
+        if not selected_room:
+            return {
+                "status_code": 400,
+                "body": {"error": f"Room '{room_id}' not found in location '{location_id}'."}
+            }
+
+        # Ensure max_tick <= room.capacity
+        room_capacity = selected_room.get("capacity", 0)
+        if body["max_tick"] > room_capacity:
+            return {
+                "status_code": 400,
+                "body": {
+                    "error": f"max_tick ({body['max_tick']}) cannot exceed room capacity ({room_capacity})."
+                }
+            }
+
         # ---- Build the event_doc after passing validations ----
         id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
         event_doc = {
-            "id": id,
             "event_id": event_id,
-            "creator_id": [body["user_id"]], # maybe this?
+            "creator_id": [user_id],  # storing as a list
             "name": body["name"],
-            "group": body["group"],
+            "type": body["type"],
             "desc": body["desc"],
-            "location_id": body["location_id"],
+            "location_id": location_id,
+            "room_id": room_id,  # store the chosen room
             "start_date": body["start_date"],
             "end_date": body["end_date"],
             "max_tick": body["max_tick"],
-            "max_tick_pp": body["max_tick_pp"],
             "tags": body.get("tags", []),
             "img_url": img_url
         }
@@ -199,8 +220,24 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # ---- JSON Schema validation ----
         jsonschema.validate(instance=event_doc, schema=EVENT_SCHEMA)
 
-        # ---- Insert into Cosmos DB ----
+        # ---- Insert the event into Cosmos DB (Events container) ----
         EventsContainerProxy.create_item(event_doc)
+
+        # ---- Add the event to the location doc's "events_ids" array ----
+        if "events_ids" not in location_doc:
+            location_doc["events_ids"] = []
+        location_doc["events_ids"].append({"event_id": event_id})
+
+        # ---- Also append to the room's "events_ids" ----
+        for room in rooms:
+            if room["room_id"] == room_id:
+                if "events_ids" not in room:
+                    room["events_ids"] = []
+                room["events_ids"].append({"event_id": event_id})
+                break  # Room found and updated
+
+        # ---- Update the location document in Cosmos (important!) ----
+        LocationsContainerProxy.replace_item(item=location_doc, body=location_doc)
 
         return {
             "status_code": 201,
@@ -212,7 +249,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "status_code": 400,
             "body": {"error": f"JSON schema validation error: {str(e)}"}
         }
-    
+
     except Exception as e:
         logging.error(f"Error creating event: {e}")
         logging.error(traceback.format_exc())
@@ -221,17 +258,16 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-
-def get_event(req, EventsContainerProxy):
+def delete_event(req, EventsContainerProxy):
     """
-    READ an event by event_id and user_id.
+    Original delete_event logic.
     """
     try:
         if req.method == 'POST':
             data = req.get_json()
             event_id = data.get("event_id")
             user_id = data.get("user_id")
-        else:  # 'GET'
+        else:
             event_id = req.params.get("event_id")
             user_id = req.params.get("user_id")
 
@@ -258,39 +294,32 @@ def get_event(req, EventsContainerProxy):
 
         event_doc = items[0]
 
-        # Validate tags
-        tags = event_doc.get("tags", [])
-        if not isinstance(tags, list):
+        # Check if user is in the admin array
+        if user_id not in event_doc["creator_ids"]:
             return {
-                "status_code": 400,
-                "body": {"error": "Event has invalid 'tags' format; expected a list."}
+                "status_code": 403,
+                "body": {"error": "Unauthorized: You are not an admin of this event."}
             }
-        for t in tags:
-            if t not in valid_tags:
-                return {
-                    "status_code": 400,
-                    "body": {"error": f"Event tag '{t}' is not in {list(valid_tags)}."}
-                }
 
-        # Validate group
-        event_group = event_doc.get("group")
-        if event_group not in valid_groups:
+        # Validate type
+        event_type = event_doc.get("type")
+        if event_type not in valid_types:
             return {
                 "status_code": 400,
-                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
+                "body": {"error": f"Event type '{event_type}' is not in {list(valid_types)}."}
             }
 
         return {
             "status_code": 200,
-            "body": event_doc
+            "body": {"result": "success"}
         }
+
     except Exception as e:
-        logging.error(f"Error retrieving event: {str(e)}")
+        logging.error(f"Error deleting event: {str(e)}")
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
-
 
 def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
@@ -494,17 +523,17 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-
-def delete_event(req, EventsContainerProxy):
+# TODO: Make the user_id optional and use the user_id from the event_doc
+def get_event(req, EventsContainerProxy):
     """
-    Original delete_event logic.
+    READ an event by event_id and user_id.
     """
     try:
         if req.method == 'POST':
             data = req.get_json()
             event_id = data.get("event_id")
             user_id = data.get("user_id")
-        else:
+        else:  # 'GET'
             event_id = req.params.get("event_id")
             user_id = req.params.get("user_id")
 
@@ -531,28 +560,38 @@ def delete_event(req, EventsContainerProxy):
 
         event_doc = items[0]
 
-        # Check if user is in the admin array
-        if user_id not in event_doc["creator_ids"]:
+        # Validate tags
+        tags = event_doc.get("tags", [])
+        if not isinstance(tags, list):
             return {
-                "status_code": 403,
-                "body": {"error": "Unauthorized: You are not an admin of this event."}
+                "status_code": 400,
+                "body": {"error": "Event has invalid 'tags' format; expected a list."}
             }
+        for t in tags:
+            if t not in valid_tags:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Event tag '{t}' is not in {list(valid_tags)}."}
+                }
 
-        # Delete the document
-        EventsContainerProxy.delete_item(item=event_doc, partition_key=event_doc["event_id"])
+        # Validate group
+        event_group = event_doc.get("group")
+        if event_group not in valid_groups:
+            return {
+                "status_code": 400,
+                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
+            }
 
         return {
             "status_code": 200,
-            "body": {"result": "success"}
+            "body": event_doc
         }
-
     except Exception as e:
-        logging.error(f"Error deleting event: {str(e)}")
+        logging.error(f"Error retrieving event: {str(e)}")
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
-
 
 def grant_event_adminship(req, EventsContainerProxy):
     """
@@ -621,7 +660,6 @@ def grant_event_adminship(req, EventsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
 
-
 def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
     """
     Original make_calendar logic.
@@ -660,7 +698,7 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
         # ...
         # We'll do partial snippet here; same as your original.
 
-        # Validate filters like tags, group, desc, location_id, max_tick, max_tick_pp
+        # Validate filters like tags, type, desc, location_id, max_tick, max_tick_pp
         # (A) tags
         if "tags" in filters and filters["tags"]:
             if not isinstance(filters["tags"], list):
@@ -720,18 +758,12 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
                     "body": {"error": f"location_id '{filters['location_id']}' not found in DB."}
                 }
 
-        # (E) max_tick, max_tick_pp => must be > 0
+        # (E) max_tick => must be > 0
         if "max_tick" in filters:
             if not isinstance(filters["max_tick"], (int, float)) or filters["max_tick"] <= 0:
                 return {
                     "status_code": 400,
                     "body": {"error": "max_tick must be a positive number."}
-                }
-        if "max_tick_pp" in filters:
-            if not isinstance(filters["max_tick_pp"], (int, float)) or filters["max_tick_pp"] <= 0:
-                return {
-                    "status_code": 400,
-                    "body": {"error": "max_tick_pp must be a positive number."}
                 }
 
         # Query events in date range
@@ -771,10 +803,6 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
             # max_tick
             if "max_tick" in filters:
                 if ev_doc.get("max_tick") != filters["max_tick"]:
-                    return False
-            # max_tick_pp
-            if "max_tick_pp" in filters:
-                if ev_doc.get("max_tick_pp") != filters["max_tick_pp"]:
                     return False
             return True
 

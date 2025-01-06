@@ -10,6 +10,15 @@ from datetime import timedelta, datetime
 from dateutil import parser, tz
 from urllib.parse import urlparse
 
+# Load location schema for validation, if needed for multiple functions
+def load_location_schema():
+    events_schema = os.path.join(os.path.dirname(__file__), '..', 'schemas/location.json')
+    with open(events_schema) as f:
+        return json.load(f)
+
+location_schema = load_location_schema()
+
+# TODO: Should also return the room details (capacity and stuff)
 def get_location_groups(req, LocationsContainerProxy):
     """
     Returns all location_ids and their associated groups from the locations container.
@@ -73,3 +82,412 @@ def get_location_groups(req, LocationsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
 
+# Returns room details given a specified location_id
+def get_rooms_from_location_id(req, LocationsContainerProxy):
+    """
+    Given a location_id, return the list of rooms (and their properties) from that building.
+    
+    Request can be GET or POST:
+      - If GET, location_id is read from query string (?location_id=xxxx)
+      - If POST, location_id is read from JSON body.
+    """
+    try:
+        # Handle both GET and POST methods
+        if req.method == 'POST':
+            body = req.get_json()
+            location_id = body.get("location_id")
+        else:  # GET
+            location_id = req.params.get("location_id")
+
+        if not location_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "Missing 'location_id' parameter"}
+            }
+
+        # Query the database for the given location_id
+        query = "SELECT * FROM c WHERE c.location_id = @location_id"
+        params = [{"name": "@location_id", "value": location_id}]
+        locations = list(
+            LocationsContainerProxy.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            )
+        )
+
+        if not locations:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Location '{location_id}' not found"}
+            }
+        
+        # We expect exactly one document per location_id (assuming your design)
+        location_doc = locations[0]
+        rooms = location_doc.get("rooms", [])
+
+        return {
+            "status_code": 200,
+            "body": {
+                "message": f"Successfully retrieved rooms for location '{location_id}'",
+                "rooms": rooms  # Return the list of room objects as-is
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error retrieving rooms from building: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+    
+def create_location(req, LocationsContainerProxy, location_schema=location_schema):
+    """
+    Creates a new location document in the Locations container.
+    Required fields (per location_schema or as listed): 
+      [
+         "location_id",
+         "location_name",
+         "events_ids",
+         "rooms"
+      ]
+    Additional checks:
+      - location_id and location_name must be unique across all documents
+      - Validate rooms array structure: room_id must be unique in that location
+      - Type checks if no location_schema is provided, or schema-based validation if location_schema is available
+      If successful, returns 202.
+    """
+    try:
+        body = req.get_json()
+
+        # Quick mandatory field check
+        required_fields = ["location_id", "location_name", "events_ids", "rooms"]
+        missing = [f for f in required_fields if f not in body]
+        if missing:
+            return {
+                "status_code": 400,
+                "body": {"error": f"Missing mandatory field(s): {missing}"}
+            }
+
+        # Check uniqueness of location_id / location_name across all docs
+        check_query = (
+            "SELECT * FROM c "
+            "WHERE c.location_id = @loc_id OR c.location_name = @loc_name"
+        )
+        check_params = [
+            {"name": "@loc_id", "value": body["location_id"]},
+            {"name": "@loc_name", "value": body["location_name"]}
+        ]
+        existing_docs = list(
+            LocationsContainerProxy.query_items(
+                query=check_query,
+                parameters=check_params,
+                enable_cross_partition_query=True
+            )
+        )
+
+        if existing_docs:
+            return {
+                "status_code": 400,
+                "body": {
+                    "error": (
+                        f"Location with ID '{body['location_id']}' or "
+                        f"name '{body['location_name']}' already exists."
+                    )
+                }
+            }
+
+        # If a JSON schema is provided, use it for validation
+        if location_schema:
+            try:
+                jsonschema.validate(instance=body, schema=location_schema)
+            except jsonschema.exceptions.ValidationError as ve:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"JSON schema validation error: {str(ve)}"}
+                }
+        else:
+            # Minimal type checks if no schema is provided
+            if not isinstance(body["location_id"], str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "location_id must be a string."}
+                }
+            if not isinstance(body["location_name"], str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "location_name must be a string."}
+                }
+            if not isinstance(body["events_ids"], list):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "events_ids must be a list."}
+                }
+            if not isinstance(body["rooms"], list):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "rooms must be a list of objects."}
+                }
+
+        # Ensure rooms have unique room_id within this new location
+        seen_room_ids = set()
+        for room in body["rooms"]:
+            rid = room.get("room_id")
+            if rid in seen_room_ids:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Duplicate room_id '{rid}' in 'rooms' array."}
+                }
+            seen_room_ids.add(rid)
+
+        # All checks pass -> create new location
+        new_doc = {
+            # Typically Cosmos DB requires an "id" field (if not auto-generated).
+            "id": str(uuid.uuid4()),
+            "location_id": body["location_id"],
+            "location_name": body["location_name"],
+            "events_ids": body["events_ids"],
+            "rooms": body["rooms"]
+        }
+        # Include additional fields if provided, so we don't lose them:
+        for key, val in body.items():
+            if key not in new_doc:
+                new_doc[key] = val
+
+        LocationsContainerProxy.create_item(new_doc)
+
+        return {
+            "status_code": 202,
+            "body": {
+                "message": "Location created successfully.",
+                "location_id": body["location_id"]
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error creating location: {e}")
+        logging.error(traceback.format_exc())
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+
+
+def delete_location(req, LocationsContainerProxy):
+    """
+    Deletes a location from the container by location_id.
+    - If location exists, deletes it and returns 200/201
+    - Otherwise returns 404
+    """
+    try:
+        # Handle both GET and POST methods for location_id
+        if req.method == 'POST':
+            body = req.get_json()
+            location_id = body.get("location_id")
+        else:
+            location_id = req.params.get("location_id")
+
+        if not location_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "Missing 'location_id' parameter"}
+            }
+
+        # Fetch the doc
+        query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+        params = [{"name": "@loc_id", "value": location_id}]
+        docs = list(LocationsContainerProxy.query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+
+        if not docs:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Location '{location_id}' not found"}
+            }
+
+        doc_to_delete = docs[0]
+        # Cosmos DB requires the partition key (often location_id) and the internal 'id'
+        item_id = doc_to_delete["id"]
+        partition_key = doc_to_delete["location_id"]  # or whatever your partition key is
+
+        LocationsContainerProxy.delete_item(item=item_id, partition_key=partition_key)
+
+        return {
+            "status_code": 200,
+            "body": {"message": f"Location '{location_id}' deleted successfully."}
+        }
+
+    except Exception as e:
+        logging.error(f"Error deleting location: {e}")
+        logging.error(traceback.format_exc())
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+
+
+def read_location(req, LocationsContainerProxy):
+    """
+    Reads a location document by location_id. 
+    - If the location exists, return the full document with 200/201
+    - Otherwise return 404
+    """
+    try:
+        if req.method == 'POST':
+            body = req.get_json()
+            location_id = body.get("location_id")
+        else:
+            location_id = req.params.get("location_id")
+
+        if not location_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "Missing 'location_id' parameter"}
+            }
+
+        query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+        params = [{"name": "@loc_id", "value": location_id}]
+        docs = list(LocationsContainerProxy.query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+
+        if not docs:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Location '{location_id}' not found."}
+            }
+
+        # Return the location document
+        location_doc = docs[0]
+        return {
+            "status_code": 200,
+            "body": {
+                "message": f"Location '{location_id}' found.",
+                "location": location_doc
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error reading location: {e}")
+        logging.error(traceback.format_exc())
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+
+
+def edit_location(req, LocationsContainerProxy, location_schema=location_schema):
+    """
+    Edits an existing location document. Required fields in the location schema are:
+       ["location_id", "location_name", "events_ids", "rooms"]
+    - If no fields are specified in the body, return 400
+    - Validate each updated field is compatible with the location JSON schema
+    - If document not found, return 404
+    - Otherwise upsert/replace the location and return 200/201
+    """
+    try:
+        body = req.get_json()
+        if not body or not isinstance(body, dict):
+            return {
+                "status_code": 400,
+                "body": {"error": "Request body must be a valid JSON object."}
+            }
+
+        # We must have at least location_id to find the document
+        location_id = body.get("location_id")
+        if not location_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "Missing 'location_id' field to identify the document to edit."}
+            }
+
+        # Retrieve the existing doc
+        query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+        params = [{"name": "@loc_id", "value": location_id}]
+        docs = list(LocationsContainerProxy.query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+        if not docs:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Location '{location_id}' not found, cannot edit."}
+            }
+
+        location_doc = docs[0]
+
+        # Merge updates from body into the existing doc
+        # We skip "id" because that's the internal Cosmos ID
+        # But we allow all other fields from the location schema
+        updatable_keys = ["location_id", "location_name", "events_ids", "rooms"]
+        updated_any_field = False
+
+        for key in updatable_keys:
+            if key in body:
+                location_doc[key] = body[key]
+                updated_any_field = True
+
+        if not updated_any_field:
+            return {
+                "status_code": 400,
+                "body": {"error": "No updatable fields specified in request body."}
+            }
+
+        # If we have a location schema, validate with jsonschema
+        if location_schema:
+            try:
+                jsonschema.validate(instance=location_doc, schema=location_schema)
+            except jsonschema.exceptions.ValidationError as ve:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"JSON schema validation error: {str(ve)}"}
+                }
+
+        # Otherwise, do minimal checks (for demonstration) if no schema:
+        else:
+            # Example minimal checks
+            if not isinstance(location_doc["location_id"], str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "location_id must be a string."}
+                }
+            if not isinstance(location_doc["location_name"], str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "location_name must be a string."}
+                }
+            if not isinstance(location_doc["events_ids"], list):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "events_ids must be a list."}
+                }
+            if not isinstance(location_doc["rooms"], list):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "rooms must be a list of objects."}
+                }
+
+        # Replace (upsert) the doc in the database
+        LocationsContainerProxy.replace_item(item=location_doc, body=location_doc)
+
+        return {
+            "status_code": 200,
+            "body": {
+                "message": f"Location '{location_id}' updated successfully.",
+                "location": location_doc
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error editing location: {e}")
+        logging.error(traceback.format_exc())
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }

@@ -10,7 +10,6 @@
     "start_date",
     "end_date",
     "max_tick",
-    "max_tick_pp",
     "img_url"
   ],
   "properties": {
@@ -62,11 +61,6 @@
       "type": "number",
       "minimum": 0,
       "description": "Maximum number of tickets available for the event."
-    },
-    "max_tick_pp": {
-      "type": "number",
-      "minimum": 0,
-      "description": "Maximum number of tickets per person."
     },
     "img_url": {
       "type": "string",
