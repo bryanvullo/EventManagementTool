@@ -26,15 +26,37 @@ class TestRegisterPlayer(unittest.TestCase):
         "password": "password123!!"
     }
 
+    testUser1 = {
+        "email": "test-user@gmail.com",
+        "password": "password123!!"
+    }
+    testUser2 = {
+        "email": "test-user2@gmail.com",
+        "password": "password123!!"
+    }
+    testUser3 = {
+        "email": "test-user3@gmail.com",
+        "password": "password123!!"
+    }
+
+    @classmethod
+    def tearDownClass(cls):
+        response = requests.post(cls.TEST_URL, json=cls.testUser1, 
+                                 headers={"x-functions-key": cls.FunctionAppKey})
+        response = requests.post(cls.TEST_URL, json=cls.testUser2, 
+                                 headers={"x-functions-key": cls.FunctionAppKey})
+        response = requests.post(cls.TEST_URL, json=cls.testUser3, 
+                                 headers={"x-functions-key": cls.FunctionAppKey})
+
     def tearDown(self):
         for doc in self.UserContainerProxy.read_all_items():
-          self.UserContainerProxy.delete_item(item=doc,partition_key=doc['id'])
+          self.UserContainerProxy.delete_item(item=doc, partition_key=doc['user_id'])
 
     def test_register_valid_player(self):
         response = requests.post(self.TEST_URL, json=self.validPlayer, 
                                  headers={"x-functions-key": self.FunctionAppKey})
 
-        self.assertEqual(response.json(), 201)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["result"], f"User '{self.validPlayer.get('email')}' has been registered.")
 
     if __name__ == '__main__':
