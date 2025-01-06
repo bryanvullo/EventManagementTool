@@ -520,6 +520,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
+# TODO: Make the user_id optional and use the user_id from the event_doc
 def get_event(req, EventsContainerProxy):
     """
     READ an event by event_id and user_id.
