@@ -179,7 +179,9 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # ---- Build the event_doc after passing validations ----
         event_id = str(uuid.uuid4())
+        id = str(uuid.uuid4())
         event_doc = {
+            "id": id,
             "event_id": event_id,
             "creator_id": [body["user_id"]], # maybe this?
             "name": body["name"],

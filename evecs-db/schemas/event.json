@@ -74,5 +74,5 @@
       "description": "URL of the event image."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": true
 }
