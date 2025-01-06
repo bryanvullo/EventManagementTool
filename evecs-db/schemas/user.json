@@ -1,28 +1,32 @@
 {
-  "bsonType": "object",
-  "required": ["user_id", "IP", "email", "auth", "password"],
+  "type": "object",
+  "required": ["user_id", "IP", "email", "auth", "password", "groups"],
   "properties": {
     "user_id": {
-      "bsonType": "string",
+      "type": "string",
       "description": "Unique identifier for the user."
     },
     "IP": {
-      "bsonType": "string",
+      "type": "string",
       "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}$",
       "description": "IP address of the user."
     },
     "email": {
-      "bsonType": "string",
+      "type": "string",
       "pattern": "^[\\w.-]+@([\\w-]+\\.)+[\\w-]{2,4}$",
       "description": "Email address of the user."
     },
     "auth": {
-      "bsonType": "bool",
+      "type": "bool",
       "description": "Authentication status of the user."
     },
     "password": {
-      "bsonType": "string",
+      "type": "string",
       "description": "User's password. (Recommended to store a hash.)"
+    },
+    "groups": {
+      "type": "string",
+      "description": "Indicates the group of user. (e.g. society, lecture module code, etc.)"
     }
   },
   "additionalProperties": true
