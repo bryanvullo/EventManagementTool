@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "required": [
+    "event_id",
+    "creator_id",  
+    "name",
+    "group",
+    "desc",
+    "location_id",
+    "start_date",
+    "end_date",
+    "max_tick",
+    "max_tick_pp",
+    "img_url"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique identifier for the event."
+    },
+    "creator_id": {
+      "type": "array",
+      "description": "Array of user IDs who are event owners or admins.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the event."
+    },
+    "group": {
+      "type": "string",
+      "description": "Indicates the group of event. (e.g. society, lecture module code, etc.)"
+    },
+    "tags": {
+      "type": "array",
+      "description": "List of tags associated with the event.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "desc": {
+      "type": "string",
+      "description": "Description of the event."
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Location reference in locations partition."
+    },
+    "start_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.[0-9]{1,6})?Z$",
+      "description": "Start date/time in UTC, format yyyy-MM-ddTHH:mm:ss.fffffffZ"
+    },
+    "end_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.[0-9]{1,6})?Z$",
+      "description": "End date/time in UTC, format yyyy-MM-ddTHH:mm:ss.fffffffZ"
+    },
+    "max_tick": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Maximum number of tickets available for the event."
+    },
+    "max_tick_pp": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Maximum number of tickets per person."
+    },
+    "img_url": {
+      "type": "string",
+      "pattern": "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/[^\\s]*)?$",
+      "description": "URL of the event image."
+    }
+  },
+  "additionalProperties": true
+}
