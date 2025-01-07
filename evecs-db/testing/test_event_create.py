@@ -170,7 +170,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
     def test_events_schema(self):
         """
-        Test that the 'event.json' file itself is valid JSON Schema (draft-07).
+        Test that the 'event.json' file itself is a valid JSON Schema.
         """
         with open(self.schema_path, 'r') as f:
             schema = json.load(f)
@@ -179,7 +179,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             jsonschema.Draft7Validator.check_schema(schema)
         except SchemaError as e:
             print("Schema Error:", e)
-            self.fail("Schema is not valid JSON Schema (draft-07)!")
+            self.fail("Schema is not valid under Draft 7!")
         except Exception as e:
             self.fail(f"Unexpected error checking schema: {e}")
 
@@ -275,6 +275,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "group": "lecture",
             "desc": "Invalid URL for image",
             "location_id": self.location_id,
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 10,
@@ -465,6 +466,8 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
         #Cleanup
         self._delete_event_in_db(server_event_id)
+
+# TODO: Test cases for too small a room, a room already booked, etc.
 
     # ----------------------------------------------------------------
     # Helper Methods

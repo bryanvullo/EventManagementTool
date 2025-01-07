@@ -310,4 +310,3 @@ def delete_ticket(req, TicketsContainerProxy):
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
-
