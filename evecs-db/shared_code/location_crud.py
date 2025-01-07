@@ -22,6 +22,9 @@ location_schema = load_location_schema()
 def get_location_groups(req, LocationsContainerProxy):
     """
     Returns all locations and their associated groups from the locations container.
+    Returns:
+        - List of all locations with their full details
+        - List of all unique groups across all locations
     """
     try:
         # Handle both GET and POST methods
@@ -61,11 +64,41 @@ def get_location_groups(req, LocationsContainerProxy):
             # Remove internal Cosmos DB id if present
             if 'id' in loc:
                 del loc['id']
-            location_list.append(loc)
             
-            # Still collect groups for the groups list
-            if "groups" in loc and isinstance(loc["groups"], list):
-                all_groups.update(loc["groups"])
+            # Add location to list
+            location_obj = {
+                "location_id": loc["location_id"],
+                "location_name": loc["location_name"],
+                "events_ids": loc.get("events_ids", []),
+                "capacity": loc.get("capacity", 0),
+                "rooms": []
+            }
+
+            # Add rooms if present
+            if "rooms" in loc and isinstance(loc["rooms"], list):
+                for room in loc["rooms"]:
+                    room_obj = {
+                        "room_id": room.get("room_id", ""),
+                        "room_name": room.get("room_name", ""),
+                        "capacity": room.get("capacity", 0),
+                        "description": room.get("description", ""),
+                        "events_ids": room.get("events_ids", [])
+                    }
+                    location_obj["rooms"].append(room_obj)
+
+            location_list.append(location_obj)
+            
+            # Collect groups from events if present
+            if "events_ids" in loc:
+                for event in loc.get("events_ids", []):
+                    if "group" in event:
+                        all_groups.add(event["group"])
+
+            # Also check rooms for events with groups
+            for room in loc.get("rooms", []):
+                for event in room.get("events_ids", []):
+                    if "group" in event:
+                        all_groups.add(event["group"])
 
         return {
             "status_code": 200,
