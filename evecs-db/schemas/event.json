@@ -8,6 +8,7 @@
     "group",
     "desc",
     "location_id",
+    "room_id", 
     "start_date",
     "end_date",
     "max_tick",
@@ -29,9 +30,12 @@
       "type": "string",
       "description": "Name of the event."
     },
-    "group": {
-      "type": "string",
-      "description": "Indicates the group of event. (e.g. society, lecture module code, etc.)"
+    "groups": {
+      "type": "array",
+      "description": "Array of groups associated with the event.",
+      "items": {
+        "type": "string"
+      }
     },
     "tags": {
       "type": "array",

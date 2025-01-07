@@ -332,6 +332,7 @@ def delete_event(req, EventsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
 
+# TODO: Update to reflect the changes in the create_event function
 def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
     Same logic as your original update_event function.
@@ -724,6 +725,7 @@ def grant_event_adminship(req, EventsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
 
+# TODO: Update to reflect the changes in the create_event function
 def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
     """
     Original make_calendar logic.
