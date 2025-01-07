@@ -228,13 +228,16 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         endpoint_url = self._get_create_event_url()
         bad_body = {
             "user_id": self.user_id,
-            "name": "Bad date event",
-            "group": "lecture",
-            "desc": "Start >= End",
-            "location_id": self.location_id,
-            "start_date": isoformat_now_plus(2),  # +2 days
-            "end_date": isoformat_now_plus(1),    # +1 day
-            "max_tick": 100
+            "name": "Event with optional fields",
+            "group": "COMP3200",
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
+            "start_date": isoformat_now_plus(2),
+            "end_date": isoformat_now_plus(1),
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
         resp = requests.post(endpoint_url, json=bad_body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -248,33 +251,20 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         # max_tick = 0
         body_with_zero_tick = {
             "user_id": self.user_id,
-            "name": "Zero Tick Event",
-            "group": "lecture",
-            "desc": "max_tick is zero",
-            "location_id": self.location_id,
+            "name": "Event with optional fields",
+            "group": "COMP3200",
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 0
+            "max_tick": 0,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
         resp = requests.post(endpoint_url, json=body_with_zero_tick)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
-        self.assertIn("max_tick must be greater than 0", resp.json()["error"])
-
-        # max_tick_pp = 0
-        body_with_zero_tick_pp = {
-            "user_id": self.user_id,
-            "name": "Zero Tick PP Event",
-            "type": "lecture",
-            "desc": "max_tick_pp is zero",
-            "location_id": self.location_id,
-            "start_date": isoformat_now_plus(1),
-            "end_date": isoformat_now_plus(2),
-            "max_tick": 10,
-            "max_tick_pp": 0
-        }
-        resp = requests.post(endpoint_url, json=body_with_zero_tick_pp)
-        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
-        self.assertIn("max_tick_pp must be greater than 0", resp.json()["error"])
+        self.assertIn("max_tick must be a number greater than 0.", resp.json()["error"])
 
     # 3.3. img_url must be a valid URL (or empty)
     def test_img_url_must_be_valid_or_empty(self):
@@ -314,13 +304,16 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         endpoint_url = self._get_create_event_url()
         body = {
             "user_id": bad_user_id,
-            "name": "Unauthorized Event",
-            "group": "lecture",
-            "desc": "Should fail",
-            "location_id": self.location_id,
+            "name": "Event with optional fields",
+            "group": "COMP3200",
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 403, f"Expected 403, got {resp.status_code}")
@@ -334,32 +327,57 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
-            "name": 12345,  # not a string
-            "group": "lecture",
-            "desc": ["not", "a", "string"],
-            "location_id": self.location_id,
+            "name": 123,
+            "group": "COMP3200",
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         error_msg = resp.json()["error"]
-        # The function checks name first, so we'll see that error
         self.assertIn("Event name must be a string", error_msg)
+
+        # Now test desc
+        body = {
+            "user_id": self.user_id,
+            "name": "Event with optional fields",
+            "group": "COMP3200",
+            "desc": 123,
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
+            "start_date": isoformat_now_plus(1),
+            "end_date": isoformat_now_plus(2),
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
+        }
+
+        resp = requests.post(endpoint_url, json=body)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
+        self.assertIn("Event description must be a string", resp.json()["error"])
+
 
     # 3.6. group must be in valid_groups
     def test_group_must_be_in_valid_groups(self):
         endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
-            "name": "Bad group",
+            "name": "Event with optional fields",
             "group": "random_group",
-            "desc": "This event has invalid group",
-            "location_id": self.location_id,
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -370,14 +388,16 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         endpoint_url = self._get_create_event_url()
         body = {
             "user_id": self.user_id,
-            "name": "Tags Test",
-            "group": "lecture",
-            "desc": "Invalid tags",
-            "location_id": self.location_id,
+            "name": "Event with optional fields",
+            "group": "COMP3200",
+            "desc": "Testing tags + valid URL",
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
-            "max_tick": 10,
-            "tags": ["lecture", 123]  # 123 is not a string
+            "max_tick": 20,
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", 123]
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
@@ -395,16 +415,16 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "lecture",
+            "group": "COMP3200",
             "desc": "Testing tags + valid URL",
-            "location_id": self.location_id,
+            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
+            "room_id": "1001",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 20,
-            "tags": ["lecture", "music"],
-            "img_url": "https://example.com/event.png"
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture", "music"]
         }
-        print("TEST-BODY: ", body, "\n")
 
         # POST to the endpoint
         resp = requests.post(endpoint_url, json=body)
@@ -443,7 +463,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         except exceptions.CosmosHttpResponseError as e:
             self.fail(f"An error occurred while querying the DB: {str(e)}")
 
-        # Cleanup
+        #Cleanup
         self._delete_event_in_db(server_event_id)
 
     # ----------------------------------------------------------------

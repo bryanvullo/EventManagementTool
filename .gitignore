@@ -106,7 +106,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-requirements.txt
 local.settings
 
 # Spyder project settings

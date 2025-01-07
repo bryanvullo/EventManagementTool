@@ -23,8 +23,8 @@ if os.path.exists(settings_file):
 # Use the two existing event documents in Cosmos DB (on the events partition).
 # These event_id values must exist in your DB for these tests to pass.
 # --------------------------------------------------------------------------------
-EXISTING_EVENT_ID_1 = "6dcbb691-000f-4e7a-92c8-ddc30d7f66a0"
-EXISTING_EVENT_ID_2 = "5b6e0dcc-31b5-4dd4-920e-6b2461208282"
+EXISTING_EVENT_ID_1 = "683f7199-cfd4-46df-89ef-98aec0e3dfca"
+EXISTING_EVENT_ID_2 = "324a9052-0378-45a5-9cd9-4a314d3aef72"
 
 class TestLocationCrud(unittest.TestCase):
 
@@ -47,7 +47,7 @@ class TestLocationCrud(unittest.TestCase):
         # 3) Base URL for your deployed Azure Function App (no trailing slash).
         #    Adjust if you're running locally (http://localhost:7071/api) or in Azure.
         cls.base_url = "http://localhost:7071/api"
-        #cls.deployment_url = "https://your-function-app.azurewebsites.net/api"
+        #cls.base_url = "https://your-function-app.azurewebsites.net/api"
 
         # 4) Load the function app key if needed (for Function-level auth)
         cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
@@ -61,6 +61,7 @@ class TestLocationCrud(unittest.TestCase):
         tearDownClass runs once after all tests finish.
         (Optionally) Clean up leftover test data in DB if desired.
         """
+        # Clean up test data in Cosmos DB
         pass
 
     # ----------------------------------------------------------------
@@ -112,10 +113,8 @@ class TestLocationCrud(unittest.TestCase):
         """
         POST a valid location object, expecting a 202 success code.
         """
-        location_id = f"loc_{uuid.uuid4()}"
         valid_location_body = {
-            "location_id": location_id,
-            "location_name": "Test Building",
+            "location_name": "Test Building 9",
             "events_ids": [
                 {"event_id": EXISTING_EVENT_ID_1},
                 {"event_id": EXISTING_EVENT_ID_2}
@@ -140,21 +139,23 @@ class TestLocationCrud(unittest.TestCase):
 
         resp = requests.post(self._get_create_location_url(), json=valid_location_body)
         self.assertIn(resp.status_code, [202, 201, 200], f"Unexpected status code: {resp.status_code}")
-        # data = resp.json()
-        # print("Create location response:", data)
+        data = resp.json()
+        print("Create location response:", data)
 
-        # # Check the response body for success confirmation
-        # self.assertIn("message", data, "Response body missing 'message'.")
-        # self.assertIn("location_id", data, "Response body missing 'location_id'.")
-        # self.assertEqual(data["location_id"], location_id, "location_id mismatch in response.")
+        # Check the response body for success confirmation
+        self.assertIn("message", data, "Response body missing 'message'.")
+        self.assertIn("location_id", data, "Response body missing 'location_id'.")
 
-        # Now optionally verify that the document is in the DB
-        # (We can do a read to confirm.)
-        # try:
-        #     doc = self.locations_container.read_item(item=location_id, partition_key=location_id)
-        #     self.assertEqual(doc["location_id"], location_id)
-        # except exceptions.CosmosResourceNotFoundError:
-        #     self.fail(f"Expected location document '{location_id}' not found in DB after creation.")
+        #Make a query to the database to check if the location was created
+        query = f"SELECT * FROM c WHERE c.location_id = '{data['location_id']}'"
+        results = list(self.locations_container.query_items(
+            query=query,
+            enable_cross_partition_query=True
+        ))
+        self.assertEqual(len(results), 1, "Expected exactly one matching location item.")
+        location_doc = results[0]
+        self.assertEqual(location_doc["location_name"], valid_location_body["location_name"])
+        self.assertEqual(location_doc["rooms"], valid_location_body["rooms"])
 
     # ----------------------------------------------------------------
     # 2. Creating an invalid location should fail
@@ -219,9 +220,7 @@ class TestLocationCrud(unittest.TestCase):
         2) Delete it
         3) Expect a successful status code from deletion
         """
-        location_id = f"loc_del_{uuid.uuid4()}"
         create_body = {
-            "location_id": location_id,
             "location_name": "Delete Me",
             "events_ids": [
                 {"event_id": EXISTING_EVENT_ID_1}
@@ -232,6 +231,7 @@ class TestLocationCrud(unittest.TestCase):
         # 1) Create
         resp_create = requests.post(self._get_create_location_url(), json=create_body)
         self.assertIn(resp_create.status_code, [202, 201, 200])
+        location_id = resp_create.json()["location_id"]
 
         # 2) Delete
         delete_payload = {"location_id": location_id}
