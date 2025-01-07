@@ -19,7 +19,7 @@ from shared_code.events_crud import (create_event, get_event, update_event, dele
 from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user)
 from shared_code.location_crud import (get_location_groups)
-from shared_code.location_crud import (get_rooms_from_location_id, create_location, delete_location, read_location, edit_location)
+from shared_code.location_crud import (create_location, delete_location, read_location, edit_location)
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
