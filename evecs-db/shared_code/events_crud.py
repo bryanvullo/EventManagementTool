@@ -53,8 +53,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "room_id",
             "start_date",
             "end_date",
-            "max_tick",
-            "img_url"   # added as per schema
+            "max_tick"
         ]
         missing_fields = [field for field in mandatory_fields if field not in body]
 
@@ -109,22 +108,6 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # We'll store the location doc for future updates
         location_doc = loc_items[0]
-
-        # ---- 4) Check img_url is a URL (or can be null/empty)  ----
-        img_url = body.get("img_url", "")
-        if img_url:  # only validate if non-empty
-            try:
-                parsed = urlparse(img_url)
-                if not all([parsed.scheme, parsed.netloc]):
-                    return {
-                        "status_code": 400,
-                        "body": {"error": "img_url must be a valid URL or empty."}
-                    }
-            except:
-                return {
-                    "status_code": 400,
-                    "body": {"error": "img_url must be a valid URL or empty."}
-                }
 
         # ---- 5) Check that the creator_id (user_id) is valid AND authorized  ----
         user_id = body["user_id"]
@@ -225,9 +208,12 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "start_date": body["start_date"],
             "end_date": body["end_date"],
             "max_tick": body["max_tick"],
-            "tags": body.get("tags", []),
-            "img_url": body["img_url"]
+            "tags": body.get("tags", [])
         }
+
+        # Add img_url only if it's provided
+        if "img_url" in body:
+            event_doc["img_url"] = body["img_url"]
 
         # ---- JSON Schema validation ----
         jsonschema.validate(instance=event_doc, schema=EVENT_SCHEMA)
