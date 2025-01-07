@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 # Suppose we have the following global sets for validating tags/groups:
 valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
 valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}          # TBD
-valid_types = {"lecture", "society", "sports", "music", "leisure"}  # Add any other valid types
 
 # Load event schema for validation, if needed for multiple functions
 def load_event_schema():
@@ -48,6 +47,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "group",    # changed from 'type'
             "desc",
             "location_id",
+            "room_id",
             "start_date",
             "end_date",
             "max_tick",
@@ -158,7 +158,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'group' instead of 'type' ----
+        # ---- 7) check for 'group' instead of 'group' ----
         if body["group"] not in valid_groups:
             return {
                 "status_code": 400,
@@ -309,12 +309,12 @@ def delete_event(req, EventsContainerProxy):
                 "body": {"error": "Unauthorized: You are not an admin of this event."}
             }
 
-        # Validate type
-        event_type = event_doc.get("type")
-        if event_type not in valid_types:
+        # Validate group
+        event_group = event_doc.get("group")
+        if event_group not in valid_groups:
             return {
                 "status_code": 400,
-                "body": {"error": f"Event type '{event_type}' is not in {list(valid_types)}."}
+                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
             }
 
         return {
@@ -706,7 +706,7 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
         # ...
         # We'll do partial snippet here; same as your original.
 
-        # Validate filters like tags, type, desc, location_id, max_tick, max_tick_pp
+        # Validate filters like tags, group, desc, location_id, max_tick, max_tick_pp
         # (A) tags
         if "tags" in filters and filters["tags"]:
             if not isinstance(filters["tags"], list):
