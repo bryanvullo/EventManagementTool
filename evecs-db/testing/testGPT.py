@@ -24,7 +24,7 @@ class TestGPT(unittest.TestCase):
     data = {
         "text": """I am the ECSS society president (bv1g22). 
         Create an society event for the ECSS society with name 'Welcome Evening'. 
-        The event will be hosted in location B16, in room 2015.
+        The event will be hosted in location Centenary Building, in room 3013.
         The event should start on the 1st of October 2021 at 6pm and end at 9pm.
         This is a limited event so max tickets will be of only 200. 
         Please generate a random image url for the event. 

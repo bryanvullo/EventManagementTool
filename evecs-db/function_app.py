@@ -53,6 +53,9 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
     with open('schemas/event.json', 'r') as f:
         schema = f.read()
 
+    with open('shared_code/building_names.txt', 'r') as f:
+        locations = f.read()
+
     eventJSON = ""
     prompt = f'''
         Using the following text as input, create a new event as a JSON object 
@@ -63,6 +66,9 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 
         JSON Schema:
         {schema}
+
+        The location_id property in the JSON Object must be one of the following:
+        {locations}
 
         Output:
         ONLY the JSON object for the event.

@@ -1,14 +1,14 @@
 {
-  "event_id": "event_1",
-  "creator_id": ["bv1g22"],
-  "name": "Welcome Evening",
-  "group": "society",
-  "tags": [],
-  "desc": "Join us for a fun-filled evening as we welcome new members to the ECSS society!",
-  "location_id": "B16",
-  "room_id": "2015",
-  "start_date": "2021-10-01T18:00:00.000000Z",
-  "end_date": "2021-10-01T21:00:00.000000Z",
-  "max_tick": 200,
-  "img_url": "https://source.unsplash.com/random/800x600"
+    "event_id": "123abc",
+    "creator_id": ["bv1g22"],
+    "name": "Welcome Evening",
+    "groups": ["ECSS society"],
+    "tags": ["social", "limited event"],
+    "desc": "Join us for an exciting evening with food, drinks and networking opportunities!",
+    "location_id": "Centenary Building (B100)",
+    "room_id": "3013",
+    "start_date": "2021-10-01T18:00:00Z",
+    "end_date": "2021-10-01T21:00:00Z",
+    "max_tick": 200,
+    "img_url": "https://picsum.photos/200/300"
 }
