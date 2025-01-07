@@ -5,7 +5,7 @@
     "event_id",
     "creator_id",  
     "name",
-    "group",
+    "groups",
     "desc",
     "location_id",
     "room_id", 
