@@ -47,7 +47,7 @@ def get_location_groups(req, LocationsContainerProxy):
             if not locations:
                 return {
                     "status_code": 404,
-                    "body": {"error": "Location not found"}
+                    "body": {"error": f"Location with ID '{location_id}' not found"}
                 }
         else:
             query = "SELECT * FROM c"
@@ -62,8 +62,12 @@ def get_location_groups(req, LocationsContainerProxy):
 
         for loc in locations:
             # Remove internal Cosmos DB id if present
-            if 'id' in loc:
-                del loc['id']
+            if '_rid' in loc: del loc['_rid']
+            if '_self' in loc: del loc['_self']
+            if '_etag' in loc: del loc['_etag']
+            if '_attachments' in loc: del loc['_attachments']
+            if '_ts' in loc: del loc['_ts']
+            if 'id' in loc: del loc['id']
             
             # Add location to list
             location_obj = {
@@ -91,14 +95,16 @@ def get_location_groups(req, LocationsContainerProxy):
             # Collect groups from events if present
             if "events_ids" in loc:
                 for event in loc.get("events_ids", []):
-                    if "group" in event:
-                        all_groups.add(event["group"])
+                    if "groups" in event:  # Changed from "group" to "groups"
+                        for group in event["groups"]:  # Iterate through groups array
+                            all_groups.add(group)
 
             # Also check rooms for events with groups
             for room in loc.get("rooms", []):
                 for event in room.get("events_ids", []):
-                    if "group" in event:
-                        all_groups.add(event["group"])
+                    if "groups" in event:  # Changed from "group" to "groups"
+                        for group in event["groups"]:  # Iterate through groups array
+                            all_groups.add(group)
 
         return {
             "status_code": 200,
@@ -113,7 +119,7 @@ def get_location_groups(req, LocationsContainerProxy):
         logging.error(f"Error retrieving location groups: {str(e)}")
         return {
             "status_code": 500,
-            "body": {"error": "Internal Server Error"}
+            "body": {"error": f"Internal Server Error: {str(e)}"}
         }
 
 # TODO: This needs some really bad fixing
