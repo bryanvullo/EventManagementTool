@@ -21,22 +21,19 @@ location_schema = load_location_schema()
 # TODO: Should also return the room details (capacity and stuff)
 def get_location_groups(req, LocationsContainerProxy):
     """
-    Returns all location_ids and their associated groups from the locations container.
+    Returns all locations and their associated groups from the locations container.
     """
     try:
         # Handle both GET and POST methods
         if req.method == 'POST':
-            # For POST, get any filters from request body
             body = req.get_json()
             location_id = body.get("location_id")
         else:
-            # For GET, check query parameters
             location_id = req.params.get("location_id")
 
-        # Base query
+        # Base query - now selecting entire document
         if location_id:
-            # If location_id provided, filter for specific location
-            query = "SELECT c.location_id, c.groups FROM c WHERE c.location_id = @location_id"
+            query = "SELECT * FROM c WHERE c.location_id = @location_id"
             params = [{"name": "@location_id", "value": location_id}]
             locations = list(LocationsContainerProxy.query_items(
                 query=query,
@@ -50,19 +47,23 @@ def get_location_groups(req, LocationsContainerProxy):
                     "body": {"error": "Location not found"}
                 }
         else:
-            # Get all locations if no specific id provided
-            query = "SELECT c.location_id, c.groups FROM c"
+            query = "SELECT * FROM c"
             locations = list(LocationsContainerProxy.query_items(
                 query=query,
                 enable_cross_partition_query=True
             ))
 
-        # Transform the data into the required format
-        location_list = [{"location_id": loc["location_id"]} for loc in locations]
-        
-        # Collect all unique groups across all locations
+        # Transform the data to include full location objects
+        location_list = []
         all_groups = set()
+
         for loc in locations:
+            # Remove internal Cosmos DB id if present
+            if 'id' in loc:
+                del loc['id']
+            location_list.append(loc)
+            
+            # Still collect groups for the groups list
             if "groups" in loc and isinstance(loc["groups"], list):
                 all_groups.update(loc["groups"])
 
@@ -71,7 +72,7 @@ def get_location_groups(req, LocationsContainerProxy):
             "body": {
                 "message": "Successfully retrieved location groups",
                 "locations": location_list,
-                "groups": sorted(list(all_groups))  # Convert set to sorted list
+                "groups": sorted(list(all_groups))
             }
         }
 
