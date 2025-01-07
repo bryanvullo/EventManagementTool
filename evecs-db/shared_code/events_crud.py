@@ -171,7 +171,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                         "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
                     }
 
-        # ---- 9) Check room_id exists in the location_doc ----
+        # ---- 9) Check room_id exists in the location_doc and max_tick <= room.capacity----
         room_id = body["room_id"]
 
         # Retrieve rooms from the location_doc
@@ -183,8 +183,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "status_code": 400,
                 "body": {"error": f"Room '{room_id}' not found in location '{location_id}'."}
             }
-
-        # Ensure max_tick <= room.capacity
+        
         room_capacity = selected_room.get("capacity", 0)
         if body["max_tick"] > room_capacity:
             return {
@@ -193,6 +192,40 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "error": f"max_tick ({body['max_tick']}) cannot exceed room capacity ({room_capacity})."
                 }
             }
+        
+        # ---- 10) Check if the room is available for the event's time range ----
+        for event in location_doc.get("events_ids", []):
+            event_id = event.get("event_id")
+            if not event_id:
+                continue
+            query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            params = [{"name": "@event_id", "value": event_id}]
+            items = list(EventsContainerProxy.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+            if not items:
+                continue
+            event_doc = items[0]
+            start_dt = parser.isoparse(event_doc["start_date"])
+            end_dt = parser.isoparse(event_doc["end_date"])
+            if start_dt <= end_dt:
+                if start_dt <= end_dt and start_dt <= end_dt:
+                    if (start_dt <= start_dt <= end_dt) or (start_dt <= end_dt <= end_dt):
+                        return {
+                            "status_code": 400,
+                            "body": {
+                                "error": f"Room '{room_id}' is already booked for the event's time range."
+                            }
+                        }
+            else:
+                return {
+                    "status_code": 400,
+                    "body": {
+                        "error": f"Invalid event time range: start_date ({event_doc['start_date']}) > end_date ({event_doc['end_date']})."
+                    }
+                }
 
         # ---- Build the event_doc after passing validations ----
         event_id = str(uuid.uuid4())
