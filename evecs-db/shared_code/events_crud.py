@@ -47,7 +47,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         mandatory_fields = [
             "user_id",  # for creator_id
             "name",
-            "group",    # changed from 'type'
+            "groups",    # changed from 'group'
             "desc",
             "location_id",
             "room_id",
@@ -161,12 +161,18 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'group' ----
-        if body["group"] not in valid_groups:
+        # ---- 7) check for 'groups' ----
+        if not isinstance(body["groups"], list):
             return {
                 "status_code": 400,
-                "body": {"error": f"Invalid event group '{body['group']}'. Must be one of {list(valid_groups)}."}
+                "body": {"error": "groups must be an array of strings."}
             }
+        for group in body["groups"]:
+            if group not in valid_groups:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Invalid event group '{group}'. Must be one of {list(valid_groups)}."}
+                }
 
         # ---- 8) check for 'tags' (optional field) ----
         if "tags" in body and body["tags"]:
@@ -217,7 +223,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "event_id": event_id,
             "creator_id": [body["user_id"]],  # storing as a list
             "name": body["name"],
-            "group": body["group"],
+            "groups": body["groups"],
             "desc": body["desc"],
             "location_id": body["location_id"],
             "room_id": body["room_id"],
@@ -486,12 +492,18 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 }
 
         # (vi) group check 
-        if "group" in event_doc:
-            if event_doc["group"] not in valid_groups:
+        if "groups" in event_doc:
+            if not isinstance(event_doc["groups"], list):
                 return {
                     "status_code": 400,
-                    "body": {"error": f"Invalid event group '{event_doc['group']}'. Must be one of {list(valid_groups)}."}
+                    "body": {"error": "groups must be an array of strings."}
                 }
+            for group in event_doc["groups"]:
+                if group not in valid_groups:
+                    return {
+                        "status_code": 400,
+                        "body": {"error": f"Invalid event group '{group}'. Must be one of {list(valid_groups)}."}
+                    }
         
         #(vii) # tags check
         if "tags" in event_doc and event_doc["tags"]:
