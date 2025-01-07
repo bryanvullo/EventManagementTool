@@ -11,8 +11,7 @@
     "room_id", 
     "start_date",
     "end_date",
-    "max_tick",
-    "img_url"
+    "max_tick"
   ],
   "properties": {
     "event_id": {
