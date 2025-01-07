@@ -219,15 +219,6 @@ def get_location_groups_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         status_code=result["status_code"]
     )
 
-@app.route(route="get_rooms_from_location_id", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
-def get_rooms_from_location_id_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    """Endpoint for retrieving rooms given a location_id."""
-    result = get_rooms_from_location_id(req, LocationsContainerProxy)
-    return func.HttpResponse(
-        body=json.dumps(result["body"]),
-        status_code=result["status_code"]
-    )
-
 @app.route(route="create_location", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     """Endpoint for creating a new location."""
