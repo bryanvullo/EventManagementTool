@@ -140,6 +140,7 @@ class TestGetEvent(unittest.TestCase):
         """
         # Do a GET with no params
         resp = requests.get(self.base_url)
+        print(resp.status_code) 
         self.assertIn(resp.status_code, [200, 404], "Expected 200 or 404 status code")
 
         # If 404, that means no events in DB (rare), so let's handle that:
