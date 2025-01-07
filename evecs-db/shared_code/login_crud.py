@@ -322,3 +322,75 @@ def delete_user(req, UsersContainerProxy):
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
+
+def get_account_details(req, UsersContainerProxy, EventsContainerProxy, TicketsContainerProxy):
+    """
+    Gets all details associated with a user account.
+    Input: user_id (via query param or POST body)
+    Output: User details, events created, tickets held
+    """
+    try:
+        # Get user_id from either query params or POST body
+        if req.method == 'POST':
+            body = req.get_json()
+            user_id = body.get("user_id")
+        else:
+            user_id = req.params.get("user_id")
+
+        if not user_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "user_id is required"}
+            }
+
+        # 1. Get user details
+        user_query = "SELECT * FROM c WHERE c.user_id = @uid"
+        user_params = [{"name": "@uid", "value": user_id}]
+        users = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+
+        if not users:
+            return {
+                "status_code": 404,
+                "body": {"error": "User not found"}
+            }
+
+        user_doc = users[0]
+        # Remove sensitive information
+        if "password" in user_doc:
+            del user_doc["password"]
+
+        # 2. Get events created by user
+        events_query = "SELECT * FROM c WHERE ARRAY_CONTAINS(c.creator_id, @uid)"
+        events = list(EventsContainerProxy.query_items(
+            query=events_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+
+        # 3. Get tickets held by user
+        tickets_query = "SELECT * FROM c WHERE c.user_id = @uid"
+        tickets = list(TicketsContainerProxy.query_items(
+            query=tickets_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+
+        return {
+            "status_code": 200,
+            "body": {
+                "user": user_doc,
+                "events_created": events,
+                "tickets": tickets
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error in get_account_details: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
