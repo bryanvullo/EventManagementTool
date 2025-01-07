@@ -6,7 +6,7 @@ from azure.cosmos import CosmosClient
 
 from pathlib import Path
 
-class TestRegisterPlayer(unittest.TestCase):   
+class TestLogin(unittest.TestCase):   
     LOCAL_DEV_URL = "http://localhost:7071/api/"
     PUBLIC_URL = "https://evecs.azurewebsites.net/api/"
     TEST_FUNCTION = "login_user"
