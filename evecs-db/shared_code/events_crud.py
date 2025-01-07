@@ -10,6 +10,8 @@ from datetime import timedelta, datetime
 from dateutil import parser, tz
 from urllib.parse import urlparse
 
+from shared_code.ticket_crud import get_ticket
+
 # Suppose we have the following global sets for validating tags/groups:
 valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
 valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}          # TBD
@@ -532,12 +534,18 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-# TODO: Make the user_id optional and use the user_id from the event_doc
-def get_event(req, EventsContainerProxy):
+
+def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerProxy):
     """
-    READ an event by event_id and user_id.
+    Retrieve events according to different input scenarios:
+
+    1. No user_id and no event_id: Return all events.
+    2. Only user_id: Check user exists, then return all events the user is subscribed to.
+    3. Only event_id: Check event exists, then return that event.
+    4. Both user_id and event_id: Check user is subscribed to the event, then return it.
     """
     try:
+        # Extract parameters from request
         if req.method == 'POST':
             data = req.get_json()
             event_id = data.get("event_id")
@@ -546,61 +554,108 @@ def get_event(req, EventsContainerProxy):
             event_id = req.params.get("event_id")
             user_id = req.params.get("user_id")
 
-        if not event_id or not user_id:
-            return {
-                "status_code": 400,
-                "body": {"error": "Missing event_id or user_id"}
-            }
+        # Check if user exists in DB
+        if user_id:
+            user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
+            user_params = [{"name": "@user_id", "value": user_id}]
+            user_items = list(UsersContainerProxy.query_items(
+                query=user_query, 
+                parameters=user_params, 
+                enable_cross_partition_query=True
+            ))
+            if not user_items:
+                return {"status_code": 404, "body": {"error": f"User '{user_id}' not found."}}
+        
+        # check if event exists in DB
+        if event_id:
+            event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            event_params = [{"name": "@event_id", "value": event_id}]
+            event_items = list(EventsContainerProxy.query_items(
+                query=event_query, 
+                parameters=event_params, 
+                enable_cross_partition_query=True
+            )) 
+            if not event_items:
+                return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
 
-        # Query the event by event_id
-        query = "SELECT * FROM c WHERE c.event_id = @event_id"
-        params = [{"name": "@event_id", "value": event_id}]
-        items = list(EventsContainerProxy.query_items(
-            query=query,
-            parameters=params,
-            enable_cross_partition_query=True
-        ))
+        # Scenario 1: No inputs => return all events
+        if not user_id and not event_id:
+            query = "SELECT * FROM c"
+            items = list(EventsContainerProxy.query_items(query=query, enable_cross_partition_query=True))
+            if not items:
+                return {"status_code": 404, "body": {"error": "No events found."}}
+            return {"status_code": 200, "body": {"event_count": len(items), "events": items}}
 
-        if not items:
-            return {
-                "status_code": 404,
-                "body": {"error": "Event not found"}
-            }
+        # Scenario 2: Only user_id => return all events user is subscribed to using get_ticket
+        elif user_id and not event_id:
+            # Fetch tickets for user
+            ticket_req = type('', (), {})()
+            ticket_req.method = 'GET'
+            ticket_req.params = {"user_id": user_id}
+            ticket_res = get_ticket(ticket_req, TicketsContainerProxy)
+            if ticket_res["status_code"] != 200:
+                return {"status_code": ticket_res["status_code"], "body": ticket_res["body"]}
 
-        event_doc = items[0]
+            # Use event_ids from tickets to retrieve events
+            subscribed_events = []
+            for t in ticket_res["body"]["subscriptions"]:
+                e_id = t.get("event_id")
+                if not e_id:
+                    return {"status_code": 400, "body": {"error": "Invalid ticket data: missing event_id."}}
+                event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+                event_params = [{"name": "@event_id", "value": e_id}]
+                ev_items = list(EventsContainerProxy.query_items(
+                    query=event_query, 
+                    parameters=event_params,
+                    enable_cross_partition_query=True
+                ))
+                if ev_items:
+                    subscribed_events.append(ev_items[0])
 
-        # Validate tags
-        tags = event_doc.get("tags", [])
-        if not isinstance(tags, list):
-            return {
-                "status_code": 400,
-                "body": {"error": "Event has invalid 'tags' format; expected a list."}
-            }
-        for t in tags:
-            if t not in valid_tags:
-                return {
-                    "status_code": 400,
-                    "body": {"error": f"Event tag '{t}' is not in {list(valid_tags)}."}
-                }
+            if not subscribed_events: subscribed_events = [] # empty list if no events better than 404
+            return {"status_code": 200, "body": {"user_id": user_id, "event_count": len(subscribed_events), "events": subscribed_events}}
 
-        # Validate group
-        event_group = event_doc.get("group")
-        if event_group not in valid_groups:
-            return {
-                "status_code": 400,
-                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
-            }
+        # Scenario 3: Only event_id => return that event
+        elif event_id and not user_id:
+            query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            params = [{"name": "@event_id", "value": event_id}]
+            items = list(EventsContainerProxy.query_items(
+                query=query, 
+                parameters=params, 
+                enable_cross_partition_query=True
+            ))
+            if not items:
+                return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
+            return {"status_code": 200, "body": items[0]}
 
-        return {
-            "status_code": 200,
-            "body": event_doc
-        }
+        # Scenario 4: Both user_id and event_id => return the event if user is subscribed
+        elif user_id and event_id:
+            # Check subscription with get_ticket
+            ticket_req = type('', (), {})()
+            ticket_req.method = 'GET'
+            ticket_req.params = {"user_id": user_id, "event_id": event_id}
+            ticket_res = get_ticket(ticket_req, TicketsContainerProxy)
+            if ticket_res["status_code"] != 200:
+                return {"status_code": ticket_res["status_code"], "body": ticket_res["body"]}
+            # Retrieve the event
+            event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            event_params = [{"name": "@event_id", "value": event_id}]
+            event_items = list(EventsContainerProxy.query_items(
+                query=event_query, 
+                parameters=event_params,
+                enable_cross_partition_query=True
+            ))
+            if not event_items:
+                return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
+            return {"status_code": 200, "body": event_items[0]}
+
+        else:
+            return {"status_code": 400, "body": {"error": "Invalid combination of user_id and event_id."}}
+
     except Exception as e:
-        logging.error(f"Error retrieving event: {str(e)}")
-        return {
-            "status_code": 500,
-            "body": {"error": "Internal Server Error"}
-        }
+        logging.error(f"Error in get_event: {str(e)}")
+        return {"status_code": 500, "body": {"error": "Internal Server Error"}}
+
 
 def grant_event_adminship(req, EventsContainerProxy):
     """
