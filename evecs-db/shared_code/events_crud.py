@@ -13,8 +13,8 @@ from urllib.parse import urlparse
 from shared_code.ticket_crud import get_ticket
 
 # Suppose we have the following global sets for validating tags/groups:
-valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
-valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}          # TBD
+valid_tags = {"lecture", "society", "leisure", "sports", "music", "sex"}  # TBD
+valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}   # TBD
 
 # Load event schema for validation, if needed for multiple functions
 def load_event_schema():
@@ -874,6 +874,39 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
 
     except Exception as e:
         logging.error(f"Error in make_calendar: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+    
+def get_valid_groups():
+    """
+    Returns all valid groups defined here.
+    """
+    try:
+        return {
+            "status_code": 200,
+            "body": {"groups": list(valid_groups)}
+        }
+    except Exception as e:
+        logging.error(f"Error in get_groups: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
+    
+
+def get_valid_tags():
+    """
+    Returns all valid tags defined here.
+    """
+    try:
+        return {
+            "status_code": 200,
+            "body": {"tags": list(valid_tags)}
+        }
+    except Exception as e:
+        logging.error(f"Error in get_tags: {str(e)}")
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
