@@ -230,7 +230,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         bad_body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -253,7 +253,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body_with_zero_tick = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -273,7 +273,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body_invalid_url = {
             "user_id": self.user_id,
             "name": "Bad Img URL Event",
-            "group": "lecture",
+            "groups": ["COMP3200"],
             "desc": "Invalid URL for image",
             "location_id": self.location_id,
             "room_id": "1001",
@@ -307,7 +307,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": bad_user_id,
             "name": "Event with optional fields",
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -330,7 +330,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": 123,
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -349,7 +349,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": 123,
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -371,7 +371,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "random_group",
+            "group": ["random_group"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -383,7 +383,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
-        self.assertIn("Invalid event group 'random_group'", resp.json()["error"])
+        self.assertIn("Missing mandatory field(s): ['groups']", resp.json()["error"])
 
     # 3.7. tags must be a list of valid tags
     def test_tags_must_be_valid(self):
@@ -391,7 +391,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": "COMP3200",
+            "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
