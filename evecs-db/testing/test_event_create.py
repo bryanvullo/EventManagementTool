@@ -152,7 +152,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         Returns the 'create_event' endpoint with the function key appended.
         Example: https://evecs.azurewebsites.net/api/create_event?code=XYZ
         """
-        return f"{self.deployment_url}/create_event?code={self.function_key}"
+        return f"{self.base_url}/create_event?code={self.function_key}"
 
     # ----------------------------------------------------------------
     # 1. Test that DB/partition connections work.
