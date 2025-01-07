@@ -181,18 +181,12 @@ def get_ticket(req, TicketsContainerProxy):
                 enable_cross_partition_query=True
             ))
             
-            if not items:
-                return {
-                    "status_code": 404,
-                    "body": {"error": "No tickets found for this event"}
-                }
-            
             return {
                 "status_code": 200,
                 "body": {
                     "event_id": event_id,
                     "ticket_count": len(items),
-                    "tickets": items
+                    "tickets": items if items else []
                 }
             }
 
@@ -206,18 +200,12 @@ def get_ticket(req, TicketsContainerProxy):
                 enable_cross_partition_query=True
             ))
             
-            if not items:
-                return {
-                    "status_code": 404,
-                    "body": {"error": "User is not subscribed to any events"}
-                }
-            
             return {
                 "status_code": 200,
                 "body": {
                     "user_id": user_id,
                     "subscription_count": len(items),
-                    "subscriptions": items
+                    "subscriptions": items if items else []
                 }
             }
 
@@ -235,17 +223,11 @@ def get_ticket(req, TicketsContainerProxy):
                 enable_cross_partition_query=True
             ))
 
-            if not items:
-                return {
-                    "status_code": 404,
-                    "body": {"error": "User is not subscribed to this event"}
-                }
-
             return {
                 "status_code": 200,
                 "body": {
-                    "subscribed": True,
-                    "ticket": items[0]
+                    "subscribed": len(items) > 0,
+                    "ticket": items[0] if items else {}
                 }
             }
         
