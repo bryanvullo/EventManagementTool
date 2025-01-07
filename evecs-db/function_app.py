@@ -63,12 +63,18 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
 
         JSON Schema:
         {schema}
+
+        Output:
+        ONLY the JSON object for the event.
+        Please do not include any additional information or notes.
         '''
     valid = False
 
+    v = jsonschema.Draft7Validator(json.loads(schema))
+
     i= 0
     while i in range(4):
-        eventJSON = OpenAIClient.chat.completions.create(
+        result = OpenAIClient.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": 
@@ -77,11 +83,16 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
             ]
         )
         i += 1 # Added an i update here
+        eventJSON = result.choices[0].message.content
         try: 
-            jsonschema.validate(instance=eventJSON, schema=schema)
+            logging.info(f"Event JSON: {eventJSON}")
+            v.is_valid(eventJSON)
+            # jsonschema.validate(instance=eventJSON, schema=schema)
             valid = True
             break
         except jsonschema.exceptions.ValidationError as e:
+            logging.error(f"Error: {e.message}")
+        except jsonschema.exceptions.SchemaError as e:
             logging.error(f"Error: {e.message}")
 
     if not valid:
@@ -91,7 +102,7 @@ def createEventGPT(req: func.HttpRequest) -> func.HttpResponse:
         )
     
     return func.HttpResponse(
-        body = json.dumps(eventJSON),
+        body = json.dumps({"result" : eventJSON}),
         status_code=200
     )
 
