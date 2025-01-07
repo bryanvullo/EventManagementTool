@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft-07/schema",
   "type": "object",
   "required": [
     "event_id",
@@ -46,6 +47,10 @@
     "location_id": {
       "type": "string",
       "description": "Location reference in locations partition."
+    },
+    "room_id": {
+      "type": "string",
+      "description": "Room reference in locations partition."
     },
     "start_date": {
       "type": "string",
