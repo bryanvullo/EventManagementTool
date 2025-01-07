@@ -22,7 +22,13 @@ class TestGPT(unittest.TestCase):
     FunctionAppKey = settings['Values']['FUNCTION_APP_KEY']
 
     data = {
-        "text": "I am the ECSS society president (bv1g22). Create an society event for the ECSS society with name 'Welcome Evening'. The event will be hosted in location B16. The event should start on the 1st of October 2021 at 6pm and end at 9pm.This is a limited event so max tickets will be of only 200. Please generate a random image url for the event. Also generate an event ID and a short description for the event."
+        "text": """I am the ECSS society president (bv1g22). 
+        Create an society event for the ECSS society with name 'Welcome Evening'. 
+        The event will be hosted in location B16, in room 2015.
+        The event should start on the 1st of October 2021 at 6pm and end at 9pm.
+        This is a limited event so max tickets will be of only 200. 
+        Please generate a random image url for the event. 
+        Also generate an event ID and a short description for the event."""
     }
 
     def test_register_valid_player(self):
@@ -31,8 +37,11 @@ class TestGPT(unittest.TestCase):
         
         print(response.text)
 
-        self.assertEqual(response.json(), 200)
-        self.assertEqual(response.json()["result"], True)
+        self.assertEqual(response.status_code, 200)
+
+        outputPath = Path(__file__).parent / 'GPT-output.json'
+        with open(outputPath, 'w') as f:
+            f.write(response.json()['result'])
 
     if __name__ == '__main__':
         unittest.main()
