@@ -1,9 +1,7 @@
 {
   "type": "object",
   "required": [
-    "location_id",
     "location_name",
-    "events_ids",
     "rooms"
   ],
   "properties": {
@@ -35,7 +33,7 @@
       "description": "List of available rooms for this location.",
       "items": {
         "type": "object",
-        "required": ["room_id", "room_name", "capacity", "event_id"],
+        "required": ["room_name", "capacity"],
         "properties": {
           "room_id": {
             "type": "string",

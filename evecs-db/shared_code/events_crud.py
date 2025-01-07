@@ -32,7 +32,8 @@ def isoformat_now_plus(days_offset=0):
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
-
+# TODO: Return 400 if the selected room is already booked for the event's time range
+# TODO: Return 400 if the event's max_tick exceeds the room's capacity
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
     Create a new event, performing various business logic validations.
@@ -158,7 +159,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'group' instead of 'group' ----
+        # ---- 7) check for 'group' ----
         if body["group"] not in valid_groups:
             return {
                 "status_code": 400,
