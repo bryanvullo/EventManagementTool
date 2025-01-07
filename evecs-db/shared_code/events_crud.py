@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 # Suppose we have the following global sets for validating tags/groups:
 valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
-valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "lecture"}          # TBD
+valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}          # TBD
 valid_types = {"lecture", "society", "sports", "music", "leisure"}  # Add any other valid types
 
 # Load event schema for validation, if needed for multiple functions
@@ -43,8 +43,15 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # ---- 0) Check mandatory fields  ----
         mandatory_fields = [
-            "user_id", "name", "type", "desc", "location_id",
-            "start_date", "end_date", "max_tick", "max_tick_pp"
+            "user_id",  # for creator_id
+            "name",
+            "group",    # changed from 'type'
+            "desc",
+            "location_id",
+            "start_date",
+            "end_date",
+            "max_tick",
+            "img_url"   # added as per schema
         ]
         missing_fields = [field for field in mandatory_fields if field not in body]
 
@@ -151,11 +158,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Event description must be a string."}
             }
 
-        # ---- 7) check for 'type':
-        if body["type"] not in valid_types:
+        # ---- 7) check for 'group' instead of 'type' ----
+        if body["group"] not in valid_groups:
             return {
                 "status_code": 400,
-                "body": {"error": f"Invalid event type '{body['type']}'. Must be one of {list(valid_types)}."}
+                "body": {"error": f"Invalid event group '{body['group']}'. Must be one of {list(valid_groups)}."}
             }
 
         # ---- 8) check for 'tags' (optional field) ----
@@ -201,21 +208,21 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             }
 
         # ---- Build the event_doc after passing validations ----
-        id = str(uuid.uuid4())
         event_id = str(uuid.uuid4())
         event_doc = {
+            "id": event_id,
             "event_id": event_id,
-            "creator_id": [user_id],  # storing as a list
+            "creator_id": [body["user_id"]],  # storing as a list
             "name": body["name"],
-            "type": body["type"],
+            "group": body["group"],
             "desc": body["desc"],
-            "location_id": location_id,
-            "room_id": room_id,  # store the chosen room
+            "location_id": body["location_id"],
+            "room_id": body["room_id"],
             "start_date": body["start_date"],
             "end_date": body["end_date"],
             "max_tick": body["max_tick"],
             "tags": body.get("tags", []),
-            "img_url": img_url
+            "img_url": body["img_url"]
         }
 
         # ---- JSON Schema validation ----
@@ -227,14 +234,14 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # ---- Add the event to the location doc's "events_ids" array ----
         if "events_ids" not in location_doc:
             location_doc["events_ids"] = []
-        location_doc["events_ids"].append({"event_id": event_id})
+        location_doc["events_ids"].append({"event_id": event_doc["event_id"]})
 
         # ---- Also append to the room's "events_ids" ----
         for room in rooms:
             if room["room_id"] == room_id:
                 if "events_ids" not in room:
                     room["events_ids"] = []
-                room["events_ids"].append({"event_id": event_id})
+                room["events_ids"].append({"event_id": event_doc["event_id"]})
                 break  # Room found and updated
 
         # ---- Update the location document in Cosmos (important!) ----
@@ -242,7 +249,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         return {
             "status_code": 201,
-            "body": {"result": "success", "event_id": event_id}
+            "body": {"result": "success", "event_id": event_doc["event_id"]}
         }
 
     except jsonschema.exceptions.ValidationError as e:
