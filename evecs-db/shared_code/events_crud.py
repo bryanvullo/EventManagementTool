@@ -162,16 +162,11 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             }
 
         # ---- 7) check for 'groups' ----
-        if not isinstance(body["groups"], list):
-            return {
-                "status_code": 400,
-                "body": {"error": "groups must be an array of strings."}
-            }
-        for group in body["groups"]:
-            if group not in valid_groups:
+        for g in body["groups"]:
+            if g not in valid_groups:
                 return {
                     "status_code": 400,
-                    "body": {"error": f"Invalid event group '{group}'. Must be one of {list(valid_groups)}."}
+                    "body": {"error": f"Invalid event group(s) '{body['groups']}'. Must be one of {list(valid_groups)}."}
                 }
 
         # ---- 8) check for 'tags' (optional field) ----
@@ -319,12 +314,13 @@ def delete_event(req, EventsContainerProxy):
             }
 
         # Validate group
-        event_group = event_doc.get("group")
-        if event_group not in valid_groups:
-            return {
-                "status_code": 400,
-                "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
-            }
+        event_group = event_doc.get("groups")
+        for g in event_group:
+            if g not in valid_groups:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
+                }
 
         return {
             "status_code": 200,
@@ -493,16 +489,11 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # (vi) group check 
         if "groups" in event_doc:
-            if not isinstance(event_doc["groups"], list):
-                return {
-                    "status_code": 400,
-                    "body": {"error": "groups must be an array of strings."}
-                }
-            for group in event_doc["groups"]:
-                if group not in valid_groups:
+            for g in event_doc["groups"]:
+                if g not in valid_groups:
                     return {
                         "status_code": 400,
-                        "body": {"error": f"Invalid event group '{group}'. Must be one of {list(valid_groups)}."}
+                        "body": {"error": f"Invalid event group '{event_doc['groups']}'. Must be one of {list(valid_groups)}."}
                     }
         
         #(vii) # tags check
@@ -738,6 +729,7 @@ def grant_event_adminship(req, EventsContainerProxy):
         }
 
 # TODO: Update to reflect the changes in the create_event function
+# TODO: Groups is now a list :(
 def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
     """
     Original make_calendar logic.
