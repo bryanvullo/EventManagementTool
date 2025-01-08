@@ -318,21 +318,17 @@ def delete_event(req, EventsContainerProxy):
 
         event_doc = items[0]
 
-        # Check if user is in the admin array
-        if user_id not in event_doc["creator_ids"]:
+        #Check if user is in the admin array
+        if user_id not in event_doc["creator_id"]:
             return {
                 "status_code": 403,
                 "body": {"error": "Unauthorized: You are not an admin of this event."}
             }
 
-        # Validate group
-        event_group = event_doc.get("groups")
-        for g in event_group:
-            if g not in valid_groups:
-                return {
-                    "status_code": 400,
-                    "body": {"error": f"Event group '{event_group}' is not in {list(valid_groups)}."}
-                }
+        # Delete the event from the DB
+        EventsContainerProxy.delete_item(
+        item=event_doc["id"],           
+        partition_key=event_doc["event_id"])
 
         return {
             "status_code": 200,
@@ -409,7 +405,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # 4) Update only the fields provided
         updatable_fields = [
-            "name", "group", "desc", "location_id", "start_date",
+            "name", "groups", "desc", "location_id", "start_date",
             "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
         ]
         for field in updatable_fields:
