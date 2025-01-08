@@ -76,7 +76,7 @@
     },
     "img_url": {
       "type": "string",
-      "pattern": "^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/[^\\s]*)?$",
+      "pattern": "^$|^(https?:\\/\\/)?([\\w.-]+)+(:\\d+)?(\\/[^\\s]*)?$",
       "description": "URL of the event image."
     }
   },
