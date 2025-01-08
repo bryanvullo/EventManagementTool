@@ -50,7 +50,7 @@ class TestGetEvent(unittest.TestCase):
         # 3) Known existing event/user from your data snippet
         #    (already in DB according to the instructions)
         cls.existing_event_id = "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
-        cls.existing_user_id = "34458144-3260-4242-8c6d-8cc64295f2cf"
+        cls.existing_user_id = "e99c0fc0-e800-48db-b358-c9106f216a12"
 
         # 4) Endpoint for get_event (no trailing slash).
         cls.function_key = os.environ.get('FUNCTION_APP_KEY')
