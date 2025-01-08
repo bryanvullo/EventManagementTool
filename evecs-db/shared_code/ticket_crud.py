@@ -129,6 +129,7 @@ def create_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContain
             "ticket_id": generated_id,    # Our application's identifier
             "user_id": body["user_id"],
             "event_id": body["event_id"],
+            "validated": False, # Every ticket is created as not validated
             "email": email
         }
 
