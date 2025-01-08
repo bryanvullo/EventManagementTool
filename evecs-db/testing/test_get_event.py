@@ -49,12 +49,13 @@ class TestGetEvent(unittest.TestCase):
 
         # 3) Known existing event/user from your data snippet
         #    (already in DB according to the instructions)
-        cls.existing_event_id = "65e508ff-b12b-4089-993d-fb7a87107c26"
-        cls.existing_user_id = "f5aa4aed-de39-4919-8445-93d877668121"
+        cls.existing_event_id = "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
+        cls.existing_user_id = "34458144-3260-4242-8c6d-8cc64295f2cf"
 
         # 4) Endpoint for get_event (no trailing slash).
-        #    You might need to adjust the port/base if running locally vs. deployed.
+        cls.function_key = os.environ.get('FUNCTION_APP_KEY')
         cls.base_url = "http://localhost:7071/api/get_event"
+        cls.deplyment_url = f"https://evecs.azurewebsites.net/api/get_event?code={cls.function_key}"
         # If your function requires a code, append ?code=XYZ or &code=XYZ
         cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
         if cls.function_key:

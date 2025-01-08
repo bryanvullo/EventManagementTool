@@ -117,7 +117,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         cls.room_id_1015 = "1015"
 
         # 5) Insert a test user doc with auth=True
-        cls.user_id = f"user_{uuid.uuid4()}"
+        cls.user_id = str(uuid.uuid4())
         cls.user_doc = {
             "id": cls.user_id,
             "user_id": cls.user_id,
