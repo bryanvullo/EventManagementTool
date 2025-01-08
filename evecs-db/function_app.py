@@ -18,8 +18,7 @@ from openai import AzureOpenAI
 from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar, get_valid_groups_crud, get_valid_tags_crud)
 from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket, update_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user, get_account_details)
-from shared_code.location_crud import (get_location_groups)
-from shared_code.location_crud import (create_location, delete_location, read_location, edit_location)
+from shared_code.location_crud import (create_location, delete_location, edit_location, get_location)
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
@@ -244,14 +243,6 @@ def delete_user_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 # LOCATION CRUD ENDPOINTS
 # NOTE: The actual code is contained in the shared_code/location_crud folder.
 # -------------------------
-@app.route(route="get_location_groups", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
-def get_location_groups_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = get_location_groups(req, LocationsContainerProxy)
-    return func.HttpResponse(
-        body=json.dumps(result["body"]),
-        status_code=result["status_code"]
-    )
-
 @app.route(route="create_location", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def create_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     """Endpoint for creating a new location."""
@@ -261,19 +252,18 @@ def create_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         status_code=result["status_code"]
     )
 
-@app.route(route="delete_location", auth_level=func.AuthLevel.FUNCTION, methods=['POST', 'DELETE'])
-def delete_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    """Endpoint for deleting a location by location_id."""
-    result = delete_location(req, LocationsContainerProxy)
+@app.route(route="get_location", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
+def get_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = get_location(req, LocationsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
     )
 
-@app.route(route="read_location", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
-def read_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    """Endpoint for reading a location's full document by location_id."""
-    result = read_location(req, LocationsContainerProxy)
+@app.route(route="delete_location", auth_level=func.AuthLevel.FUNCTION, methods=['POST', 'DELETE'])
+def delete_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    """Endpoint for deleting a location by location_id."""
+    result = delete_location(req, LocationsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]

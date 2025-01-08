@@ -18,111 +18,7 @@ def load_location_schema():
 
 location_schema = load_location_schema()
 
-# TODO: Should also return the room details (capacity and stuff)
-def get_location_groups(req, LocationsContainerProxy):
-    """
-    Returns all locations and their associated groups from the locations container.
-    Returns:
-        - List of all locations with their full details
-        - List of all unique groups across all locations
-    """
-    try:
-        # Handle both GET and POST methods
-        if req.method == 'POST':
-            body = req.get_json()
-            location_id = body.get("location_id")
-        else:
-            location_id = req.params.get("location_id")
 
-        # Base query - now selecting entire document
-        if location_id:
-            query = "SELECT * FROM c WHERE c.location_id = @location_id"
-            params = [{"name": "@location_id", "value": location_id}]
-            locations = list(LocationsContainerProxy.query_items(
-                query=query,
-                parameters=params,
-                enable_cross_partition_query=True
-            ))
-            
-            if not locations:
-                return {
-                    "status_code": 404,
-                    "body": {"error": f"Location with ID '{location_id}' not found"}
-                }
-        else:
-            query = "SELECT * FROM c"
-            locations = list(LocationsContainerProxy.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
-        # Transform the data to include full location objects
-        location_list = []
-        all_groups = set()
-
-        for loc in locations:
-            # Remove internal Cosmos DB id if present
-            if '_rid' in loc: del loc['_rid']
-            if '_self' in loc: del loc['_self']
-            if '_etag' in loc: del loc['_etag']
-            if '_attachments' in loc: del loc['_attachments']
-            if '_ts' in loc: del loc['_ts']
-            if 'id' in loc: del loc['id']
-            
-            # Add location to list
-            location_obj = {
-                "location_id": loc["location_id"],
-                "location_name": loc["location_name"],
-                "events_ids": loc.get("events_ids", []),
-                "capacity": loc.get("capacity", 0),
-                "rooms": []
-            }
-
-            # Add rooms if present
-            if "rooms" in loc and isinstance(loc["rooms"], list):
-                for room in loc["rooms"]:
-                    room_obj = {
-                        "room_id": room.get("room_id", ""),
-                        "room_name": room.get("room_name", ""),
-                        "capacity": room.get("capacity", 0),
-                        "description": room.get("description", ""),
-                        "events_ids": room.get("events_ids", [])
-                    }
-                    location_obj["rooms"].append(room_obj)
-
-            location_list.append(location_obj)
-            
-            # Collect groups from events if present
-            if "events_ids" in loc:
-                for event in loc.get("events_ids", []):
-                    if "groups" in event:  # Changed from "group" to "groups"
-                        for group in event["groups"]:  # Iterate through groups array
-                            all_groups.add(group)
-
-            # Also check rooms for events with groups
-            for room in loc.get("rooms", []):
-                for event in room.get("events_ids", []):
-                    if "groups" in event:  # Changed from "group" to "groups"
-                        for group in event["groups"]:  # Iterate through groups array
-                            all_groups.add(group)
-
-        return {
-            "status_code": 200,
-            "body": {
-                "message": "Successfully retrieved location groups",
-                "locations": location_list,
-                "groups": sorted(list(all_groups))
-            }
-        }
-
-    except Exception as e:
-        logging.error(f"Error retrieving location groups: {str(e)}")
-        return {
-            "status_code": 500,
-            "body": {"error": f"Internal Server Error: {str(e)}"}
-        }
-
-# TODO: This needs some really bad fixing
 def create_location(req, LocationsContainerProxy, location_schema=location_schema):
     """
     Creates a new location document in the Locations container.
@@ -288,55 +184,56 @@ def delete_location(req, LocationsContainerProxy):
         }
 
 
-def read_location(req, LocationsContainerProxy):
+def get_location(req, LocationsContainerProxy, location_schema=location_schema):
     """
-    Reads a location document by location_id. 
-    - If the location exists, return the full document with 200/201
-    - Otherwise return 404
+    Gets location(s) from the database.
+    Input (JSON):
+      - location_id (optional): if provided, returns specific location
+                              if not provided, returns all locations
+    Output: { status_code: int, body: dict }
     """
     try:
-        if req.method == 'POST':
-            body = req.get_json()
-            location_id = body.get("location_id")
+        body = req.get_json() if req.get_json() else {}
+        location_id = body.get("location_id")
+
+        if location_id:
+            # Get specific location
+            query = "SELECT * FROM c WHERE c.location_id = @lid"
+            params = [{"name": "@lid", "value": location_id}]
+            docs = list(LocationsContainerProxy.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+
+            if not docs:
+                return {
+                    "status_code": 404,
+                    "body": {"error": f"Location '{location_id}' not found."}
+                }
+
+            return {
+                "status_code": 200,
+                "body": {"location": docs[0]}
+            }
         else:
-            location_id = req.params.get("location_id")
+            # Get all locations
+            query = "SELECT * FROM c"
+            docs = list(LocationsContainerProxy.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
 
-        if not location_id:
             return {
-                "status_code": 400,
-                "body": {"error": "Missing 'location_id' parameter"}
+                "status_code": 200,
+                "body": {"locations": docs}
             }
-
-        query = "SELECT * FROM c WHERE c.location_id = @loc_id"
-        params = [{"name": "@loc_id", "value": location_id}]
-        docs = list(LocationsContainerProxy.query_items(
-            query=query,
-            parameters=params,
-            enable_cross_partition_query=True
-        ))
-
-        if not docs:
-            return {
-                "status_code": 404,
-                "body": {"error": f"Location '{location_id}' not found."}
-            }
-
-        # Return the location document
-        location_doc = docs[0]
-        return {
-            "status_code": 200,
-            "body": {
-                "message": f"Location '{location_id}' found.",
-                "location": location_doc
-            }
-        }
 
     except Exception as e:
-        logging.error(f"Error reading location: {e}")
-        logging.error(traceback.format_exc())
+        logging.error(f"Error getting location(s): {str(e)}")
         return {
             "status_code": 500,
-            "body": {"error": "Internal Server Error"}
+            "body": {"error": "Internal server error"}
         }
 
 
