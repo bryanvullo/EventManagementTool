@@ -976,7 +976,7 @@ class TestGetGroupsTags(unittest.TestCase):
             "COMP3420", "COMP3666", "COMP3229", "Sports"
         ]
         cls.expected_tags = [
-            "lecture", "society", "leisure", "sports", "music", "sex"
+            "lecture", "society", "leisure", "sports", "music"
         ]
 
     def test_get_valid_groups(self):
