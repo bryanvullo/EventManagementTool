@@ -551,7 +551,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         }
 
 
-def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerProxy):
+def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerProxy, LocationsContainerProxy):
     """
     Retrieve events according to different input scenarios:
 
@@ -642,7 +642,17 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             ))
             if not items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
-            return {"status_code": 200, "body": items[0]}
+            
+            event = items[0]
+            location_id = event.get("location_id")
+            result = list(LocationsContainerProxy.query_items(
+                query="SELECT * FROM c WHERE c.location_id = @loc_id",
+                parameters=[{"name": "@loc_id", "value": location_id}],
+                enable_cross_partition_query=True
+            ))[0]
+            event["location_name"] = result.get("location_name")
+
+            return {"status_code": 200, "body": event}
 
         # Scenario 4: Both user_id and event_id => return the event if user is subscribed
         elif user_id and event_id:

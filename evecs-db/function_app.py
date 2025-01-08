@@ -151,7 +151,7 @@ def create_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="get_event", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
 def get_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerProxy)
+    result = get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerProxy, LocationsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
