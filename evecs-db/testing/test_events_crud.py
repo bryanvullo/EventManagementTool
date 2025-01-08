@@ -456,7 +456,7 @@ class TestCreateEvent(unittest.TestCase):
 # =============================================================================
 #                     TEST CLASS 2: UPDATE & DELETE
 # =============================================================================
-class TestEventUpdateDelete(unittest.TestCase):
+class TestIntegrationEventUpdateDelete(unittest.TestCase):
     """
     Covers:
       - Deleting an event with correct/incorrect inputs
@@ -942,6 +942,81 @@ class TestGetEvent(unittest.TestCase):
 
         resp_nf = requests.get(url2)
         self.assertEqual(resp_nf.status_code, 404)
+
+
+# =============================================================================
+#                 NEW TEST CLASS 4: GET VALID GROUPS & TAGS
+# =============================================================================
+class TestGetGroupsTags(unittest.TestCase):
+    """
+    Tests the endpoints /get_valid_groups and /get_valid_tags
+    to ensure they return the correct lists of groups and tags
+    as defined in events_crud.py.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        setUpClass runs once for this class.
+        We only need to define the endpoint URLs for groups and tags.
+        """
+        cls.base_url = "http://localhost:7071/api"
+        cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
+
+        if cls.function_key:
+            cls.get_valid_groups_url = f"{cls.base_url}/get_valid_groups?code={cls.function_key}"
+            cls.get_valid_tags_url = f"{cls.base_url}/get_valid_tags?code={cls.function_key}"
+        else:
+            cls.get_valid_groups_url = f"{cls.base_url}/get_valid_groups"
+            cls.get_valid_tags_url = f"{cls.base_url}/get_valid_tags"
+
+        # Optionally, define the known "valid_groups" and "valid_tags" we expect:
+        cls.expected_groups = [
+            "COMP3200", "COMP3227", "COMP3228", "COMP3269",
+            "COMP3420", "COMP3666", "COMP3229", "Sports"
+        ]
+        cls.expected_tags = [
+            "lecture", "society", "leisure", "sports", "music", "sex"
+        ]
+
+    def test_get_valid_groups(self):
+        """
+        Verify the /get_valid_groups endpoint returns a 200 status
+        and a JSON body containing a "groups" list matching the
+        groups in events_crud.py.
+        """
+        resp = requests.get(self.get_valid_groups_url)
+        self.assertEqual(resp.status_code, 200, f"Expected 200, got {resp.status_code}")
+
+        data = resp.json()
+        self.assertIn("groups", data, "Response JSON must contain 'groups' key")
+
+        returned_groups = data["groups"]
+        self.assertIsInstance(returned_groups, list, "groups should be a list")
+
+        # Check that the returned list matches what we expect
+        # For a strict match:
+        self.assertEqual(sorted(returned_groups), sorted(self.expected_groups),
+                         "The returned groups do not match the expected list.")
+
+    def test_get_valid_tags(self):
+        """
+        Verify the /get_valid_tags endpoint returns a 200 status
+        and a JSON body containing a "tags" list matching the
+        tags in events_crud.py.
+        """
+        resp = requests.get(self.get_valid_tags_url)
+        self.assertEqual(resp.status_code, 200, f"Expected 200, got {resp.status_code}")
+
+        data = resp.json()
+        self.assertIn("tags", data, "Response JSON must contain 'tags' key")
+
+        returned_tags = data["tags"]
+        self.assertIsInstance(returned_tags, list, "tags should be a list")
+
+        # For a strict match:
+        self.assertEqual(sorted(returned_tags), sorted(self.expected_tags),
+                         "The returned tags do not match the expected list.")
 
 
 # =============================================================================

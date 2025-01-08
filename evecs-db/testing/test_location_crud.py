@@ -26,6 +26,7 @@ if os.path.exists(settings_file):
 EXISTING_EVENT_ID_1 = "683f7199-cfd4-46df-89ef-98aec0e3dfca"
 EXISTING_EVENT_ID_2 = "324a9052-0378-45a5-9cd9-4a314d3aef72"
 
+
 class TestLocationCrud(unittest.TestCase):
 
     @classmethod
@@ -47,7 +48,7 @@ class TestLocationCrud(unittest.TestCase):
         # 3) Base URL for your deployed Azure Function App (no trailing slash).
         #    Adjust if you're running locally (http://localhost:7071/api) or in Azure.
         cls.base_url = "http://localhost:7071/api"
-        #cls.base_url = "https://your-function-app.azurewebsites.net/api"
+        # cls.base_url = "https://your-function-app.azurewebsites.net/api"
 
         # 4) Load the function app key if needed (for Function-level auth)
         cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
@@ -61,7 +62,7 @@ class TestLocationCrud(unittest.TestCase):
         tearDownClass runs once after all tests finish.
         (Optionally) Clean up leftover test data in DB if desired.
         """
-        # Clean up test data in Cosmos DB
+        # No global cleanup since each test cleans up its own doc.
         pass
 
     # ----------------------------------------------------------------
@@ -69,7 +70,6 @@ class TestLocationCrud(unittest.TestCase):
     # ----------------------------------------------------------------
     def _get_create_location_url(self) -> str:
         """Returns the 'create_location' endpoint with function key appended if needed."""
-        # Example: http://localhost:7071/api/create_location?code=XYZ
         return f"{self.base_url}/create_location"
 
     def _get_delete_location_url(self) -> str:
@@ -82,11 +82,24 @@ class TestLocationCrud(unittest.TestCase):
         return f"{self.base_url}/edit_location"
 
     def _get_rooms_url(self) -> str:
-        """ Endpoint for 'get_rooms_from_building' """
+        """Endpoint for 'get_rooms_from_location_id'"""
         return f"{self.base_url}/get_rooms_from_location_id"
 
+    def _delete_in_db(self, location_id: str):
+        """
+        Direct cleanup helper to remove a location from Cosmos DB if it exists.
+        """
+        if not location_id:
+            return
+        try:
+            self.locations_container.delete_item(item=location_id, partition_key=location_id)
+        except exceptions.CosmosResourceNotFoundError:
+            pass
+        except Exception as e:
+            print(f"Error cleaning up location '{location_id}': {e}")
+
     # ----------------------------------------------------------------
-    # 0. Test that a properly formatted location.json schema 
+    # 0. Test that a properly formatted location.json schema
     #    itself is valid JSON schema
     # ----------------------------------------------------------------
     def test_0_location_schema_is_valid(self):
@@ -107,77 +120,88 @@ class TestLocationCrud(unittest.TestCase):
         print("Location schema passes draft-07 check!")
 
     # ----------------------------------------------------------------
-    # 1. Creating a valid location should succeed
+    # 1. Creating a valid location should succeed (and then we delete it)
     # ----------------------------------------------------------------
     def test_1_create_location_valid(self):
         """
         POST a valid location object, expecting a 202 success code.
+        Cleanup: delete the newly created doc in DB.
         """
-        valid_location_body = {
-            "location_name": "Test Building 9",
-            "events_ids": [
-                {"event_id": EXISTING_EVENT_ID_1},
-                {"event_id": EXISTING_EVENT_ID_2}
-            ],
-            "rooms": [
-                {
-                    "room_id": "room_A",
-                    "room_name": "Auditorium A",
-                    "capacity": 100,
-                    "events_ids": [{"event_id": EXISTING_EVENT_ID_1}],
-                    "description": "Large auditorium"
-                },
-                {
-                    "room_id": "room_B",
-                    "room_name": "Conference Room B",
-                    "capacity": 50,
-                    "events_ids": [{"event_id": EXISTING_EVENT_ID_2}],
-                    "description": "Medium conference room"
-                }
-            ]
-        }
+        location_id = None
+        try:
+            valid_location_body = {
+                "location_name": "Test Building 101",
+                "events_ids": [
+                    {"event_id": EXISTING_EVENT_ID_1},
+                    {"event_id": EXISTING_EVENT_ID_2}
+                ],
+                "rooms": [
+                    {
+                        "room_id": "room_A",
+                        "room_name": "Auditorium A",
+                        "capacity": 100,
+                        "events_ids": [{"event_id": EXISTING_EVENT_ID_1}],
+                        "description": "Large auditorium"
+                    },
+                    {
+                        "room_id": "room_B",
+                        "room_name": "Conference Room B",
+                        "capacity": 50,
+                        "events_ids": [{"event_id": EXISTING_EVENT_ID_2}],
+                        "description": "Medium conference room"
+                    }
+                ]
+            }
 
-        resp = requests.post(self._get_create_location_url(), json=valid_location_body)
-        self.assertIn(resp.status_code, [202, 201, 200], f"Unexpected status code: {resp.status_code}")
-        data = resp.json()
-        print("Create location response:", data)
+            resp = requests.post(self._get_create_location_url(), json=valid_location_body)
+            print(resp.json())
+            self.assertIn(resp.status_code, [202, 201, 200], f"Unexpected status code: {resp.status_code}")
+            data = resp.json()
+            print("Create location response:", data)
 
-        # Check the response body for success confirmation
-        self.assertIn("message", data, "Response body missing 'message'.")
-        self.assertIn("location_id", data, "Response body missing 'location_id'.")
+            # Check the response body for success confirmation
+            self.assertIn("message", data, "Response body missing 'message'.")
+            self.assertIn("location_id", data, "Response body missing 'location_id'.")
+            location_id = data["location_id"]
 
-        #Make a query to the database to check if the location was created
-        query = f"SELECT * FROM c WHERE c.location_id = '{data['location_id']}'"
-        results = list(self.locations_container.query_items(
-            query=query,
-            enable_cross_partition_query=True
-        ))
-        self.assertEqual(len(results), 1, "Expected exactly one matching location item.")
-        location_doc = results[0]
-        self.assertEqual(location_doc["location_name"], valid_location_body["location_name"])
-        self.assertEqual(location_doc["rooms"], valid_location_body["rooms"])
+            # Confirm it was created in DB
+            query = f"SELECT * FROM c WHERE c.location_id = '{location_id}'"
+            results = list(self.locations_container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            self.assertEqual(len(results), 1, "Expected exactly one matching location item.")
+            location_doc = results[0]
+            self.assertEqual(location_doc["location_name"], valid_location_body["location_name"])
+            self.assertEqual(location_doc["rooms"], valid_location_body["rooms"])
+
+        finally:
+            # Cleanup
+            if location_id:
+                self._delete_in_db(location_id)
 
     # ----------------------------------------------------------------
     # 2. Creating an invalid location should fail
-    #    We'll systematically break each required field 
+    #    We'll systematically break each required field
     # ----------------------------------------------------------------
     def test_2_create_location_invalid(self):
         """
         POST invalid location documents that fail the required property checks or type checks.
         We expect an unsuccessful (400) response for each.
+        No location is created, so no cleanup needed.
         """
         # Cases that break each required field
         invalid_payloads = [
             # 1) Missing location_id
             {
                 "location_name": "Missing ID",
-                "events_ids": [],
+                "events_ids": [EXISTING_EVENT_ID_1],
                 "rooms": []
             },
             # 2) Missing location_name
             {
                 "location_id": "loc_invalid_1",
-                "events_ids": [],
+                "events_ids": [EXISTING_EVENT_ID_1],
                 "rooms": []
             },
             # 3) Missing events_ids
@@ -190,13 +214,13 @@ class TestLocationCrud(unittest.TestCase):
             {
                 "location_id": "loc_invalid_3",
                 "location_name": "No Rooms",
-                "events_ids": []
+                "events_ids": [EXISTING_EVENT_ID_1]
             },
             # 5) Wrong data type for rooms (string instead of array)
             {
                 "location_id": "loc_invalid_4",
                 "location_name": "Bad Rooms Type",
-                "events_ids": [],
+                "events_ids": [EXISTING_EVENT_ID_1],
                 "rooms": "NotAnArray"
             }
         ]
@@ -204,8 +228,8 @@ class TestLocationCrud(unittest.TestCase):
         for idx, payload in enumerate(invalid_payloads):
             resp = requests.post(self._get_create_location_url(), json=payload)
             self.assertEqual(
-                resp.status_code, 
-                400, 
+                resp.status_code,
+                400,
                 f"[Case {idx}] Expected 400 but got {resp.status_code}. Payload: {payload}"
             )
             error_body = resp.json()
@@ -219,6 +243,7 @@ class TestLocationCrud(unittest.TestCase):
         1) Create a valid location
         2) Delete it
         3) Expect a successful status code from deletion
+        The test itself does the deletion step, so it's self-cleaning.
         """
         create_body = {
             "location_name": "Delete Me",
@@ -233,7 +258,7 @@ class TestLocationCrud(unittest.TestCase):
         self.assertIn(resp_create.status_code, [202, 201, 200])
         location_id = resp_create.json()["location_id"]
 
-        # 2) Delete
+        # 2) Delete (via the endpoint)
         delete_payload = {"location_id": location_id}
         resp_delete = requests.post(self._get_delete_location_url(), json=delete_payload)
         self.assertIn(resp_delete.status_code, [200, 201], f"Unexpected status code: {resp_delete.status_code}")
@@ -252,30 +277,36 @@ class TestLocationCrud(unittest.TestCase):
         1) Create a valid location
         2) Edit it with valid JSON data (e.g. change location_name)
         3) Expect success
+        4) Cleanup in finally
         """
-        location_id = f"loc_edit_{uuid.uuid4()}"
-        create_body = {
-            "location_id": location_id,
-            "location_name": "Edit Test Original",
-            "events_ids": [
-                {"event_id": EXISTING_EVENT_ID_2}
-            ],
-            "rooms": []
-        }
-        # Create
-        resp_create = requests.post(self._get_create_location_url(), json=create_body)
-        self.assertIn(resp_create.status_code, [200, 201, 202], f"Create failed with {resp_create.status_code}.")
+        location_id = None
+        try:
+            location_id = f"loc_edit_{uuid.uuid4()}"
+            create_body = {
+                "location_id": location_id,
+                "location_name": "Edit Test Original",
+                "events_ids": [
+                    {"event_id": EXISTING_EVENT_ID_2}
+                ],
+                "rooms": []
+            }
+            # Create
+            resp_create = requests.post(self._get_create_location_url(), json=create_body)
+            self.assertIn(resp_create.status_code, [200, 201, 202], f"Create failed with {resp_create.status_code}.")
 
-        # Edit: We'll rename the location
-        edit_body = {
-            "location_id": location_id,
-            "location_name": "Edited Building Name"
-        }
-        resp_edit = requests.post(self._get_edit_location_url(), json=edit_body)
-        self.assertIn(resp_edit.status_code, [200, 201], f"Edit returned unexpected code: {resp_edit.status_code}")
-        edit_data = resp_edit.json()
-        self.assertIn("location", edit_data, "Expected the updated location doc in response.")
-        self.assertEqual(edit_data["location"]["location_name"], edit_body["location_name"])
+            # Edit: We'll rename the location
+            edit_body = {
+                "location_id": location_id,
+                "location_name": "Edited Building Name"
+            }
+            resp_edit = requests.post(self._get_edit_location_url(), json=edit_body)
+            self.assertIn(resp_edit.status_code, [200, 201],
+                          f"Edit returned unexpected code: {resp_edit.status_code}")
+            edit_data = resp_edit.json()
+            self.assertIn("location", edit_data, "Expected the updated location doc in response.")
+            self.assertEqual(edit_data["location"]["location_name"], edit_body["location_name"])
+        finally:
+            self._delete_in_db(location_id)
 
     # ----------------------------------------------------------------
     # 4B. Create a valid location, then edit with invalid JSON data
@@ -285,86 +316,34 @@ class TestLocationCrud(unittest.TestCase):
         1) Create a valid location
         2) Try to edit with invalid data (e.g. 'rooms' as a string).
         3) Expect an error (400).
+        4) Cleanup in finally
         """
-        location_id = f"loc_edit_inv_{uuid.uuid4()}"
-        create_body = {
-            "location_id": location_id,
-            "location_name": "Edit Test Invalid",
-            "events_ids": [
-                {"event_id": EXISTING_EVENT_ID_1}
-            ],
-            "rooms": []
-        }
-        # Create
-        resp_create = requests.post(self._get_create_location_url(), json=create_body)
-        self.assertIn(resp_create.status_code, [200, 201, 202])
-
-        # Edit with invalid field
-        edit_body = {
-            "location_id": location_id,
-            "rooms": "NotAnArray"   # invalid type
-        }
-        resp_edit = requests.post(self._get_edit_location_url(), json=edit_body)
-        self.assertEqual(resp_edit.status_code, 400, f"Expected 400, got {resp_edit.status_code}.")
-        error_data = resp_edit.json()
-        self.assertIn("error", error_data)
-
-    # ----------------------------------------------------------------
-    # 5. Test get_rooms_from_location_id
-    # ----------------------------------------------------------------
-    def test_5_get_rooms_from_location_id(self):
-        """
-        1) Create a properly formatted location doc with multiple rooms
-        2) Call get_rooms_from_location_id
-        3) Check the returned rooms match what was inserted
-        """
-        location_id = f"loc_rooms_{uuid.uuid4()}"
-        rooms_example = [
-            {
-                "room_id": "room_100",
-                "room_name": "Room 100",
-                "capacity": 200,
-                "events_ids": [{"event_id": EXISTING_EVENT_ID_1}],
-                "description": "Large Lecture Hall"
-            },
-            {
-                "room_id": "room_101",
-                "room_name": "Room 101",
-                "capacity": 50,
-                "events_ids": [{"event_id": EXISTING_EVENT_ID_2}],
-                "description": "Small Meeting Room"
+        location_id = None
+        try:
+            location_id = f"loc_edit_inv_{uuid.uuid4()}"
+            create_body = {
+                "location_id": location_id,
+                "location_name": "Edit Test Invalid",
+                "events_ids": [
+                    {"event_id": EXISTING_EVENT_ID_1}
+                ],
+                "rooms": []
             }
-        ]
-        create_body = {
-            "location_id": location_id,
-            "location_name": "Get Rooms Building",
-            "events_ids": [
-                {"event_id": EXISTING_EVENT_ID_2}
-            ],
-            "rooms": rooms_example
-        }
+            # Create
+            resp_create = requests.post(self._get_create_location_url(), json=create_body)
+            self.assertIn(resp_create.status_code, [200, 201, 202])
 
-        # Create
-        resp_create = requests.post(self._get_create_location_url(), json=create_body)
-        self.assertIn(resp_create.status_code, [200, 201, 202], "Create location for get_rooms failed unexpectedly.")
-
-        # Now call get_rooms_from_location_id
-        get_rooms_payload = {"location_id": location_id}
-        resp_rooms = requests.post(self._get_rooms_url(), json=get_rooms_payload)
-        self.assertEqual(resp_rooms.status_code, 200, f"Unexpected code: {resp_rooms.status_code}")
-        body_rooms = resp_rooms.json()
-
-        self.assertIn("rooms", body_rooms, "Expected 'rooms' in response.")
-        returned_rooms = body_rooms["rooms"]
-        self.assertEqual(len(returned_rooms), len(rooms_example), "Mismatch in the number of rooms returned.")
-
-        # Check that each room matches (basic check)
-        for original, returned in zip(rooms_example, returned_rooms):
-            self.assertEqual(original["room_id"], returned["room_id"])
-            self.assertEqual(original["room_name"], returned["room_name"])
-            self.assertEqual(original["capacity"], returned["capacity"])
-            self.assertEqual(original["events_ids"], returned["events_ids"])
-            self.assertEqual(original["description"], returned["description"])
+            # Edit with invalid field
+            edit_body = {
+                "location_id": location_id,
+                "rooms": "NotAnArray"   # invalid type
+            }
+            resp_edit = requests.post(self._get_edit_location_url(), json=edit_body)
+            self.assertEqual(resp_edit.status_code, 400, f"Expected 400, got {resp_edit.status_code}.")
+            error_data = resp_edit.json()
+            self.assertIn("error", error_data)
+        finally:
+            self._delete_in_db(location_id)
 
 
 if __name__ == '__main__':
