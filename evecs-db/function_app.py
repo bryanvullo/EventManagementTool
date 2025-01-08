@@ -16,7 +16,7 @@ from openai import AzureOpenAI
 
 # Import event_crud, login_crud, ticket_crud, location_crud functions
 from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar, get_valid_groups_crud, get_valid_tags_crud)
-from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket)
+from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket, update_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user, get_account_details)
 from shared_code.location_crud import (get_location_groups)
 from shared_code.location_crud import (create_location, delete_location, read_location, edit_location)
@@ -291,6 +291,14 @@ def edit_location_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="get_account_details", methods=['GET', 'POST'])
 def get_account_details_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     result = get_account_details(req, UsersContainerProxy, EventsContainerProxy, TicketsContainerProxy)
+    return func.HttpResponse(
+        body=json.dumps(result["body"]),
+        status_code=result["status_code"]
+    )
+
+@app.route(route="update_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST', 'PUT'])
+def update_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+    result = update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]

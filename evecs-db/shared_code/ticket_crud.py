@@ -293,3 +293,135 @@ def delete_ticket(req, TicketsContainerProxy):
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
+
+def update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy):
+    """
+    Updates an existing ticket.
+    Updatable fields: email, validated
+    Input (JSON):
+      - ticket_id (required)
+      - any updatable fields
+    Output: { status_code: int, body: dict }
+    """
+    try:
+        body = req.get_json()
+        ticket_id = body.get("ticket_id")
+
+        if not ticket_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "ticket_id is required"}
+            }
+
+        # Retrieve existing ticket
+        query = "SELECT * FROM c WHERE c.ticket_id = @tid"
+        params = [{"name": "@tid", "value": ticket_id}]
+        tickets = list(TicketsContainerProxy.query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+
+        if not tickets:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Ticket '{ticket_id}' not found"}
+            }
+
+        ticket_doc = tickets[0]
+        updated_anything = False
+
+        # Update email if provided
+        if "email" in body:
+            email = body["email"]
+            if not isinstance(email, str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "Email must be a string."}
+                }
+            
+            # Create email validation schema
+            email_schema = {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": ["email"]
+            }
+            
+            try:
+                jsonschema.validate(instance={"email": email}, schema=email_schema)
+            except jsonschema.exceptions.ValidationError:
+                return {
+                    "status_code": 400,
+                    "body": {"error": "Invalid email format."}
+                }
+
+            # Check if email is already used for this event (excluding current ticket)
+            email_query = """
+                SELECT * FROM c 
+                WHERE c.event_id = @event_id 
+                AND c.email = @email 
+                AND c.ticket_id != @tid
+            """
+            email_params = [
+                {"name": "@event_id", "value": ticket_doc["event_id"]},
+                {"name": "@email", "value": email},
+                {"name": "@tid", "value": ticket_id}
+            ]
+            existing_email = list(TicketsContainerProxy.query_items(
+                query=email_query,
+                parameters=email_params,
+                enable_cross_partition_query=True
+            ))
+            
+            if existing_email:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Email '{email}' is already registered for this event"}
+                }
+
+            ticket_doc["email"] = email
+            updated_anything = True
+
+        # Update validated status if provided
+        if "validated" in body:
+            if not isinstance(body["validated"], bool):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "validated must be a boolean"}
+                }
+            ticket_doc["validated"] = body["validated"]
+            updated_anything = True
+
+        if not updated_anything:
+            return {
+                "status_code": 400,
+                "body": {"error": "No valid fields to update. Provide at least one of: email, validated"}
+            }
+
+        # Validate updated document against schema
+        jsonschema.validate(instance=ticket_doc, schema=TICKET_SCHEMA)
+
+        # Update in database
+        TicketsContainerProxy.replace_item(item=ticket_doc, body=ticket_doc)
+
+        return {
+            "status_code": 200,
+            "body": {"result": "Ticket updated successfully"}
+        }
+
+    except jsonschema.exceptions.ValidationError as e:
+        return {
+            "status_code": 400,
+            "body": {"error": f"Validation error: {str(e)}"}
+        }
+    except Exception as e:
+        logging.error(f"Error updating ticket: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
