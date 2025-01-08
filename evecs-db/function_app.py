@@ -173,11 +173,17 @@ def update_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="delete_event", auth_level=func.AuthLevel.FUNCTION, methods=['DELETE', 'POST'])
 def delete_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = delete_event(req, EventsContainerProxy)
-    return func.HttpResponse(
-        body=json.dumps(result["body"]),
-        status_code=result["status_code"]
-    )
+    try:
+        result = delete_event(req, EventsContainerProxy, UsersContainerProxy)
+        return func.HttpResponse(
+            json.dumps(result["body"]),
+            status_code=result["status_code"]
+        )
+    except Exception as e:
+        return func.HttpResponse(
+            json.dumps({"error": str(e)}),
+            status_code=500
+        )
 
 @app.route(route="grant_event_adminship", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def grant_event_adminship_endpoint(req: func.HttpRequest) -> func.HttpResponse:

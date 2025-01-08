@@ -284,7 +284,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-def delete_event(req, EventsContainerProxy):
+def delete_event(req, EventsContainerProxy, UsersContainerProxy):
     """
     Deletes an event from the database.
     Input (JSON):
@@ -321,8 +321,25 @@ def delete_event(req, EventsContainerProxy):
 
         event_doc = event_items[0]
 
-        # Check if user is creator of event
-        if user_id not in event_doc.get("creator_id", []):
+        # Check if user exists and get their auth status
+        user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
+        user_params = [{"name": "@user_id", "value": user_id}]
+        user_items = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+
+        if not user_items:
+            return {
+                "status_code": 404,
+                "body": {"error": f"User '{user_id}' not found."}
+            }
+
+        user_doc = user_items[0]
+
+        # Allow deletion if user is either an admin or the creator of the event
+        if not (user_doc.get("auth", False) or user_id in event_doc.get("creator_id", [])):
             return {
                 "status_code": 403,
                 "body": {"error": "Unauthorized: You are not allowed to delete this event."}
@@ -406,7 +423,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # 4) Update only the fields provided
         updatable_fields = [
-            "name", "groups", "desc", "location_id", "start_date",
+            "name", "groups", "desc", "location_id", "room_id", "start_date",
             "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
         ]
         for field in updatable_fields:
@@ -522,6 +539,82 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     return {
                         "status_code": 400,
                         "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
+                    }
+
+        # Add room validation after the existing validations
+        # This should go after location_id validation (around line 483)
+        if "room_id" in body or "location_id" in body or "max_tick" in body:
+            # Get current location_id (either updated or original)
+            location_id = event_doc["location_id"]
+            
+            # Fetch location document
+            loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+            loc_params = [{"name": "@loc_id", "value": location_id}]
+            loc_items = list(LocationsContainerProxy.query_items(
+                query=loc_query,
+                parameters=loc_params,
+                enable_cross_partition_query=True
+            ))
+            
+            if not loc_items:
+                return {
+                    "status_code": 400,
+                    "body": {"error": f"Location '{location_id}' not found in database."}
+                }
+            
+            location_doc = loc_items[0]
+            room_id = event_doc["room_id"]
+            
+            # Check if room exists in location
+            rooms = location_doc.get("rooms", [])
+            selected_room = next((room for room in rooms if room["room_id"] == room_id), None)
+            
+            if not selected_room:
+                return {
+                    "status_code": 404,
+                    "body": {"error": f"Room '{room_id}' not found in location '{location_id}'."}
+                }
+            
+            # Check room capacity
+            room_capacity = selected_room.get("capacity", 0)
+            if event_doc["max_tick"] > room_capacity:
+                return {
+                    "status_code": 400,
+                    "body": {
+                        "error": f"max_tick ({event_doc['max_tick']}) cannot exceed room capacity ({room_capacity})."
+                    }
+                }
+            
+            # Check for time conflicts if room or time changed
+            if "room_id" in body or "start_date" in body or "end_date" in body:
+                overlapping_events = list(
+                    EventsContainerProxy.query_items(
+                        query="""
+                        SELECT c.event_id, c.start_date, c.end_date
+                        FROM c
+                        WHERE c.location_id = @loc_id
+                          AND c.room_id = @room_id
+                          AND c.end_date > @start
+                          AND c.start_date < @end
+                          AND c.event_id != @event_id
+                        """,
+                        parameters=[
+                            {"name": "@loc_id", "value": location_id},
+                            {"name": "@room_id", "value": room_id},
+                            {"name": "@start", "value": event_doc["start_date"]},
+                            {"name": "@end", "value": event_doc["end_date"]},
+                            {"name": "@event_id", "value": event_id}
+                        ],
+                        enable_cross_partition_query=True
+                    )
+                )
+                
+                if overlapping_events:
+                    return {
+                        "status_code": 400,
+                        "body": {
+                            "error": f"Room '{room_id}' is already booked during the requested time range."
+                        }
                     }
 
         # 6) Validate updated doc with JSON schema
