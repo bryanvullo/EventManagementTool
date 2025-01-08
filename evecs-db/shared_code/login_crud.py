@@ -418,3 +418,71 @@ def get_account_details(req, UsersContainerProxy, EventsContainerProxy, TicketsC
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
+
+def get_user_id_from_email(req, UsersContainerProxy):
+    """
+    Gets user_id(s) associated with provided email(s).
+    Input (JSON):
+      - emails: string or array of strings
+    Output: { status_code: int, body: dict }
+    """
+    try:
+        # Get emails from either POST body or GET params
+        if req.method == 'POST':
+            body = req.get_json()
+            emails = body.get("emails")
+        else:  # GET
+            emails = req.params.get("emails")
+
+        # Validate input
+        if not emails:
+            return {
+                "status_code": 400,
+                "body": {"error": "emails parameter is required"}
+            }
+
+        # Convert single email to list for consistent processing
+        if isinstance(emails, str):
+            emails = [emails]
+        
+        if not isinstance(emails, list):
+            return {
+                "status_code": 400,
+                "body": {"error": "emails must be a string or array of strings"}
+            }
+
+        # Initialize results dictionary
+        results = {}
+
+        # Query each email
+        for email in emails:
+            if not isinstance(email, str):
+                continue
+
+            query = "SELECT c.user_id, c.email FROM c WHERE c.email = @em"
+            params = [{"name": "@em", "value": email}]
+            users = list(UsersContainerProxy.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+
+            if users:
+                results[email] = users[0]["user_id"]
+            else:
+                results[email] = None
+
+        return {
+            "status_code": 200,
+            "body": {
+                "email_to_user_id": results,
+                "count": len(results)
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"Error getting user_ids from emails: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
