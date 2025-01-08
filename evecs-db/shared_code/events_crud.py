@@ -321,10 +321,12 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
 
         event_doc = event_items[0]
 
-
         # Check if user is creator of event
         if user_id not in event_doc.get("creator_id", []):
-
+            return {
+                "status_code": 403,
+                "body": {"error": "Unauthorized: You are not the creator of this event."}
+            }
 
         # Check if user exists and get their auth status
         user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
