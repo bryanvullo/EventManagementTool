@@ -24,12 +24,14 @@ def register_user(req, UsersContainerProxy):
     Input (JSON):
       - email (unique)
       - password (min 8 chars + 2 special chars)
+      - auth (optional, default False)
     Output: { status_code: int, body: dict }
     """
     try:
         body = req.get_json()
         email = body.get("email")
         password = body.get("password")
+        auth = body.get("auth", False)
 
         # Check mandatory fields
         if not email or not password:
@@ -68,7 +70,7 @@ def register_user(req, UsersContainerProxy):
             "user_id": user_id,
             "IP": "0.0.0.0",
             "email": email,
-            "auth": False,
+            "auth": auth,
             "password": password
         }
 
@@ -132,7 +134,10 @@ def login_user(req, UsersContainerProxy):
 
         return {
             "status_code": 200,
-            "body": {"result": f"User '{email}' has been logged in."}
+            "body": {"result": f"User '{email}' has been logged in.",
+                     "id": user_doc["user_id"],
+                     "auth": user_doc["auth"]
+                }
         }
 
     except Exception as e:
