@@ -1,0 +1,28 @@
+{
+    "location_id": "6074cd46-c0ca-4d9b-8414-5c2d23849e92",
+    "location_name": "The Stag's Student Pub",
+    "events_ids": [],
+    "rooms": [
+      {
+        "room_id": "d4e6f8g0-h2j4-6l8n-0p2r-4t6v8w0y2z4",
+        "room_name": "Main Pub",
+        "capacity": 100,
+        "events_ids": [],
+        "description": "Main pub area"
+      },
+      {
+        "room_id": "k2m4n6p8-q0s2-4u6w-8y0a-2c4e6g8i0k2",
+        "room_name": "Events Room 1",
+        "capacity": 60,
+        "events_ids": [],
+        "description": "First events and function room"
+      },
+      {
+        "room_id": "r3t5v7x9-z1b3-5d7f-9h1j-3l5n7p9r1t3",
+        "room_name": "Events Room 2",
+        "capacity": 30,
+        "events_ids": [],
+        "description": "Second events and function room"
+      }
+    ]
+  }
