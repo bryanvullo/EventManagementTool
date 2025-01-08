@@ -32,6 +32,7 @@ def register_user(req, UsersContainerProxy):
         email = body.get("email")
         password = body.get("password")
         auth = body.get("auth", False)
+        groups = body.get("groups", [])
 
         # Check mandatory fields
         if not email or not password:
@@ -72,7 +73,7 @@ def register_user(req, UsersContainerProxy):
             "email": email,
             "auth": auth,
             "password": password,
-            "groups": []  # Initialize empty groups array
+            "groups": groups 
         }
 
         # Insert into Cosmos DB
@@ -166,6 +167,7 @@ def update_user(req, UsersContainerProxy):
         new_email = body.get("new_email")     # if user wants to change it
         new_password = body.get("password")
         new_auth = body.get("auth", None)
+        new_groups = body.get("groups", None)
 
         # Must identify user by either user_id or email
         if not user_id and not email_identifier:
@@ -252,13 +254,13 @@ def update_user(req, UsersContainerProxy):
             updated_anything = True
 
         # 4) Check groups
-        if "groups" in body:
-            if not isinstance(body["groups"], list):
+        if new_groups is not None:
+            if not isinstance(new_groups, list):
                 return {
                     "status_code": 400,
                     "body": {"error": "groups must be an array."}
                 }
-            user_doc["groups"] = body["groups"]
+            user_doc["groups"] = new_groups
             updated_anything = True
 
         if not updated_anything:
@@ -395,12 +397,16 @@ def get_account_details(req, UsersContainerProxy, EventsContainerProxy, TicketsC
             enable_cross_partition_query=True
         ))
 
+        # 4. Get groups associated with user
+        groups = user_doc.get("groups", [])
+
         return {
             "status_code": 200,
             "body": {
                 "user": user_doc,
                 "events_created": events,
-                "tickets": tickets
+                "tickets": tickets,
+                "groups": groups
             }
         }
 
