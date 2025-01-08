@@ -510,7 +510,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # (iv) img_url is a valid URL or empty
         if "img_url" in event_doc:
             img_url = event_doc["img_url"]
-            if img_url:  # if not empty
+            if img_url and img_url.strip():  # only validate if not empty or whitespace
                 try:
                     parsed = urlparse(img_url)
                     if not all([parsed.scheme, parsed.netloc]):
