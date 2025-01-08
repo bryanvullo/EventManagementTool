@@ -421,10 +421,35 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Unauthorized: You are not allowed to update this event."}
             }
 
-        # 4) Update only the fields provided
+        # Handle tags update specifically
+        if "tags" in body:
+            # If tags is None or empty list, set to empty list
+            if body["tags"] is None:
+                event_doc["tags"] = []
+            else:
+                # Validate tags
+                if not isinstance(body["tags"], list):
+                    return {
+                        "status_code": 400,
+                        "body": {"error": "tags must be a list of strings."}
+                    }
+                for t in body["tags"]:
+                    if not isinstance(t, str):
+                        return {
+                            "status_code": 400,
+                            "body": {"error": "Each tag must be a string."}
+                        }
+                    if t not in valid_tags:
+                        return {
+                            "status_code": 400,
+                            "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
+                        }
+                event_doc["tags"] = body["tags"]
+
+        # Update other fields as before
         updatable_fields = [
             "name", "groups", "desc", "location_id", "room_id", "start_date",
-            "end_date", "max_tick", "max_tick_pp", "tags", "img_url"
+            "end_date", "max_tick", "max_tick_pp", "img_url"
         ]
         for field in updatable_fields:
             if field in body:
