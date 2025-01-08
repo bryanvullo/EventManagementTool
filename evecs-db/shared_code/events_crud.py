@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from shared_code.ticket_crud import get_ticket
 
 # Suppose we have the following global sets for validating tags/groups:
-valid_tags = {"lecture", "society", "leisure", "sports", "music", "sex"}  # TBD
+valid_tags = {"lecture", "society", "leisure", "sports", "music"}  # TBD
 valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", "COMP3229", "Sports"}   # TBD
 
 # Load event schema for validation, if needed for multiple functions
