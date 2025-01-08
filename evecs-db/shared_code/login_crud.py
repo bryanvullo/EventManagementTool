@@ -81,7 +81,9 @@ def register_user(req, UsersContainerProxy):
 
         return {
             "status_code": 201,
-            "body": {"result": f"User '{email}' has been registered."}
+            "body": {"result": f"User '{email}' has been registered.",
+                     "user_id": user_id,
+                     "auth": auth}
         }
 
     except Exception as e:
