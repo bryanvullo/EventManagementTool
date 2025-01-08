@@ -33,9 +33,6 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-
-# TODO: Return 400 if the selected room is already booked for the event's time range
-# TODO: Return 400 if the event's max_tick exceeds the room's capacity
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
     Create a new event, performing various business logic validations.
@@ -171,7 +168,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                         "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
                     }
 
-        # ---- 9) Check room_id exists in the location_doc ----
+        # ---- 9) Check room_id exists in the location_doc and max_tick <= room.capacity----
         room_id = body["room_id"]
 
         # Retrieve rooms from the location_doc
@@ -180,11 +177,10 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         if not selected_room:
             return {
-                "status_code": 400,
+                "status_code": 404,
                 "body": {"error": f"Room '{room_id}' not found in location '{location_id}'."}
             }
-
-        # Ensure max_tick <= room.capacity
+        
         room_capacity = selected_room.get("capacity", 0)
         if body["max_tick"] > room_capacity:
             return {
@@ -193,7 +189,37 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                     "error": f"max_tick ({body['max_tick']}) cannot exceed room capacity ({room_capacity})."
                 }
             }
+        
+        # ---- 10) Check if the room is available for the event's time range with SQL query ----
+        overlapping_events = list(
+            EventsContainerProxy.query_items(
+                query="""
+                SELECT c.event_id, c.start_date, c.end_date
+                FROM c
+                WHERE c.location_id = @loc_id
+                  AND c.room_id = @room_id
+                  AND c.end_date > @start
+                  AND c.start_date < @end
+                """,
+                parameters=[
+                    {"name": "@loc_id", "value": body["location_id"]},
+                    {"name": "@room_id", "value": body["room_id"]},
+                    {"name": "@start",  "value": body["start_date"]},
+                    {"name": "@end",    "value": body["end_date"]},
+                ],
+                enable_cross_partition_query=True
+            )
+        )
 
+        if overlapping_events:  # not empty
+            return {
+                "status_code": 400,
+                "body": {
+                    "error": f"Room '{room_id}' is already booked during the requested time range."
+                }
+            }
+
+    
         # ---- Build the event_doc after passing validations ----
         event_id = str(uuid.uuid4())
         event_doc = {
