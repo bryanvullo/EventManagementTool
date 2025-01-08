@@ -18,6 +18,10 @@
         "type": "string",
         "format": "email",
         "description": "Email address associated with the ticket."
+      },
+      "validated": {
+        "type": "boolean",
+        "description": "Whether the ticket has been validated."
       }
     },
     "additionalProperties": true
