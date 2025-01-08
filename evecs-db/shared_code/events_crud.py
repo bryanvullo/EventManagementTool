@@ -711,9 +711,13 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             if not user_items:
                 return {"status_code": 404, "body": {"error": f"User '{user_id}' not found."}}
         
-        # check if event exists in DB
+        # Check if event exists in DB - FIXED to use both id and event_id
         if event_id:
-            event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            event_query = """
+                SELECT * FROM c 
+                WHERE c.event_id = @event_id 
+                OR c.id = @event_id
+            """
             event_params = [{"name": "@event_id", "value": event_id}]
             event_items = list(EventsContainerProxy.query_items(
                 query=event_query, 
@@ -731,56 +735,72 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
                 return {"status_code": 404, "body": {"error": "No events found."}}
             return {"status_code": 200, "body": {"event_count": len(items), "events": items}}
 
-        # Scenario 2: Only user_id => return all events user is subscribed to using get_ticket
+        # Scenario 2: Only user_id => return all events user is subscribed to - FIXED
         elif user_id and not event_id:
             # Fetch tickets for user
-            ticket_req = type('', (), {})()
-            ticket_req.method = 'GET'
-            ticket_req.params = {"user_id": user_id}
-            ticket_res = get_ticket(ticket_req, TicketsContainerProxy)
-            if ticket_res["status_code"] != 200:
-                return {"status_code": ticket_res["status_code"], "body": ticket_res["body"]}
+            ticket_query = "SELECT * FROM c WHERE c.user_id = @user_id"
+            ticket_params = [{"name": "@user_id", "value": user_id}]
+            tickets = list(TicketsContainerProxy.query_items(
+                query=ticket_query,
+                parameters=ticket_params,
+                enable_cross_partition_query=True
+            ))
 
-            # Use event_ids from tickets to retrieve events
+            # Get events for each ticket
             subscribed_events = []
-            for t in ticket_res["body"]["subscriptions"]:
-                e_id = t.get("event_id")
-                if not e_id:
-                    return {"status_code": 400, "body": {"error": "Invalid ticket data: missing event_id."}}
-                event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
-                event_params = [{"name": "@event_id", "value": e_id}]
-                ev_items = list(EventsContainerProxy.query_items(
-                    query=event_query, 
-                    parameters=event_params,
-                    enable_cross_partition_query=True
-                ))
-                if ev_items:
-                    subscribed_events.append(ev_items[0])
+            for ticket in tickets:
+                e_id = ticket.get("event_id")
+                if e_id:
+                    event_query = """
+                        SELECT * FROM c 
+                        WHERE c.event_id = @event_id 
+                        OR c.id = @event_id
+                    """
+                    event_params = [{"name": "@event_id", "value": e_id}]
+                    ev_items = list(EventsContainerProxy.query_items(
+                        query=event_query,
+                        parameters=event_params,
+                        enable_cross_partition_query=True
+                    ))
+                    if ev_items:
+                        subscribed_events.append(ev_items[0])
 
-            if not subscribed_events: subscribed_events = [] # empty list if no events better than 404
-            return {"status_code": 200, "body": {"user_id": user_id, "event_count": len(subscribed_events), "events": subscribed_events}}
+            return {
+                "status_code": 200, 
+                "body": {
+                    "user_id": user_id,
+                    "event_count": len(subscribed_events),
+                    "events": subscribed_events
+                }
+            }
 
-        # Scenario 3: Only event_id => return that event
+        # Scenario 3: Only event_id => return that event - FIXED
         elif event_id and not user_id:
-            query = "SELECT * FROM c WHERE c.event_id = @event_id"
-            params = [{"name": "@event_id", "value": event_id}]
+            event_query = """
+                SELECT * FROM c 
+                WHERE c.event_id = @event_id 
+                OR c.id = @event_id
+            """
+            event_params = [{"name": "@event_id", "value": event_id}]
             items = list(EventsContainerProxy.query_items(
-                query=query, 
-                parameters=params, 
+                query=event_query,
+                parameters=event_params,
                 enable_cross_partition_query=True
             ))
             if not items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
             
-            # getting event location name
+            # Add location name
             event = items[0]
             location_id = event.get("location_id")
-            result = list(LocationsContainerProxy.query_items(
-                query="SELECT * FROM c WHERE c.location_id = @loc_id",
-                parameters=[{"name": "@loc_id", "value": location_id}],
-                enable_cross_partition_query=True
-            ))[0]
-            event["location_name"] = result.get("location_name")
+            if location_id:
+                location_items = list(LocationsContainerProxy.query_items(
+                    query="SELECT * FROM c WHERE c.location_id = @loc_id",
+                    parameters=[{"name": "@loc_id", "value": location_id}],
+                    enable_cross_partition_query=True
+                ))
+                if location_items:
+                    event["location_name"] = location_items[0].get("location_name")
 
             return {"status_code": 200, "body": event}
 
