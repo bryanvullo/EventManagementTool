@@ -15,7 +15,7 @@ from azure.cosmos import CosmosClient, exceptions as cosmos_exceptions
 from openai import AzureOpenAI
 
 # Import event_crud, login_crud, ticket_crud, location_crud functions
-from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar, get_valid_groups, get_valid_tags)
+from shared_code.events_crud import (create_event, get_event, update_event, delete_event, grant_event_adminship, make_calendar, get_valid_groups_crud, get_valid_tags_crud)
 from shared_code.ticket_crud import (create_ticket, get_ticket, delete_ticket)
 from shared_code.login_crud import (register_user, login_user, update_user, delete_user, get_account_details)
 from shared_code.location_crud import (get_location_groups)
@@ -189,9 +189,10 @@ def make_calendar_endpoint(req: func.HttpRequest) -> func.HttpResponse:
         status_code=result["status_code"]
     )
 
+# NOTE: These may throw a 500 if so need to change names for crud functions
 @app.route(route="get_valid_groups", auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
 def get_valid_groups(req: func.HttpRequest) -> func.HttpResponse:
-    result = get_valid_groups(req)
+    result = get_valid_groups_crud()
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]
@@ -199,7 +200,7 @@ def get_valid_groups(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route='get_valid_tags', auth_level=func.AuthLevel.FUNCTION, methods=['GET', 'POST'])
 def get_valid_tags(req: func.HttpRequest) -> func.HttpResponse:
-    result = get_valid_tags(req)
+    result = get_valid_tags_crud()
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]

@@ -912,7 +912,7 @@ def make_calendar(req, EventsContainerProxy, LocationsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
     
-def get_valid_groups():
+def get_valid_groups_crud():
     """
     Returns all valid groups defined here.
     """
@@ -929,7 +929,7 @@ def get_valid_groups():
         }
     
 
-def get_valid_tags():
+def get_valid_tags_crud():
     """
     Returns all valid tags defined here.
     """
