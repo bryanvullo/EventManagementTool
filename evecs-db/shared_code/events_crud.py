@@ -284,7 +284,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-def delete_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
+def delete_event(req, EventsContainerProxy):
     """
     Deletes an event from the database.
     Input (JSON):
@@ -304,28 +304,6 @@ def delete_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 "body": {"error": "Missing event_id or user_id"}
             }
 
-        # Check if user exists and is authorized
-        user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
-        user_params = [{"name": "@u_id", "value": user_id}]
-        user_items = list(UsersContainerProxy.query_items(
-            query=user_query,
-            parameters=user_params,
-            enable_cross_partition_query=True
-        ))
-
-        if not user_items:
-            return {
-                "status_code": 400,
-                "body": {"error": f"User '{user_id}' not found."}
-            }
-
-        user_doc = user_items[0]
-        if not user_doc.get("auth", False):
-            return {
-                "status_code": 403,
-                "body": {"error": "User is not authorized to delete events."}
-            }
-
         # Get the event
         event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
         event_params = [{"name": "@event_id", "value": event_id}]
@@ -343,24 +321,12 @@ def delete_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         event_doc = event_items[0]
 
-        # Get the location to update its events_ids
-        location_id = event_doc.get("location_id")
-        if location_id:
-            loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
-            loc_params = [{"name": "@loc_id", "value": location_id}]
-            loc_items = list(LocationsContainerProxy.query_items(
-                query=loc_query,
-                parameters=loc_params,
-                enable_cross_partition_query=True
-            ))
-            
-            if loc_items:
-                location_doc = loc_items[0]
-                # Remove event from location's events_ids
-                location_doc["events_ids"] = [e for e in location_doc["events_ids"] 
-                                           if e.get("event_id") != event_id]
-                # Update location in database
-                LocationsContainerProxy.replace_item(item=location_doc, body=location_doc)
+        # Check if user is creator of event
+        if user_id not in event_doc.get("creator_id", []):
+            return {
+                "status_code": 403,
+                "body": {"error": "Unauthorized: You are not allowed to delete this event."}
+            }
 
         # Delete the event
         EventsContainerProxy.delete_item(item=event_id, partition_key=event_id)
@@ -380,7 +346,13 @@ def delete_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 # TODO: Update to reflect the changes in the create_event function
 def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
-    Same logic as your original update_event function.
+    Updates an existing event.
+    Any admin user can update any event.
+    Input (JSON):
+      - event_id (required)
+      - user_id (required)
+      - any updatable fields
+    Output: { status_code: int, body: dict }
     """
     try:
         body = req.get_json()
@@ -410,14 +382,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         event_doc = items[0]
 
-        # 2) Check user ownership 
-        if user_id not in event_doc["creator_id"]:
-            return {
-                "status_code": 403,
-                "body": {"error": "Unauthorized: You are not the creator of this event."}
-            }
-
-        # 3) Ensure the user is valid & authorized (user.auth == True)
+        # 2) Check if user exists and is authorized
         user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
         user_params = [{"name": "@u_id", "value": user_id}]
         user_items = list(UsersContainerProxy.query_items(
@@ -425,6 +390,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             parameters=user_params,
             enable_cross_partition_query=True
         ))
+
         if not user_items:
             return {
                 "status_code": 400,
@@ -435,7 +401,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         if not user_doc.get("auth", False):
             return {
                 "status_code": 403,
-                "body": {"error": f"User '{user_id}' is not authorized to update events."}
+                "body": {"error": "Unauthorized: You are not allowed to update this event."}
             }
 
         # 4) Update only the fields provided
