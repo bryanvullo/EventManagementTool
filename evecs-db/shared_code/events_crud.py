@@ -33,9 +33,6 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-
-# TODO: Return 400 if the selected room is already booked for the event's time range
-# TODO: Return 400 if the event's max_tick exceeds the room's capacity
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
     Create a new event, performing various business logic validations.
@@ -180,7 +177,7 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         if not selected_room:
             return {
-                "status_code": 400,
+                "status_code": 404,
                 "body": {"error": f"Room '{room_id}' not found in location '{location_id}'."}
             }
         
@@ -193,40 +190,36 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                 }
             }
         
-        # ---- 10) Check if the room is available for the event's time range ----
-        for event in location_doc.get("events_ids", []):
-            event_id = event.get("event_id")
-            if not event_id:
-                continue
-            query = "SELECT * FROM c WHERE c.event_id = @event_id"
-            params = [{"name": "@event_id", "value": event_id}]
-            items = list(EventsContainerProxy.query_items(
-                query=query,
-                parameters=params,
+        # ---- 10) Check if the room is available for the event's time range with SQL query ----
+        overlapping_events = list(
+            EventsContainerProxy.query_items(
+                query="""
+                SELECT c.event_id, c.start_date, c.end_date
+                FROM c
+                WHERE c.location_id = @loc_id
+                  AND c.room_id = @room_id
+                  AND c.end_date > @start
+                  AND c.start_date < @end
+                """,
+                parameters=[
+                    {"name": "@loc_id", "value": body["location_id"]},
+                    {"name": "@room_id", "value": body["room_id"]},
+                    {"name": "@start",  "value": body["start_date"]},
+                    {"name": "@end",    "value": body["end_date"]},
+                ],
                 enable_cross_partition_query=True
-            ))
-            if not items:
-                continue
-            event_doc = items[0]
-            start_dt = parser.isoparse(event_doc["start_date"])
-            end_dt = parser.isoparse(event_doc["end_date"])
-            if start_dt <= end_dt:
-                if start_dt <= end_dt and start_dt <= end_dt:
-                    if (start_dt <= start_dt <= end_dt) or (start_dt <= end_dt <= end_dt):
-                        return {
-                            "status_code": 400,
-                            "body": {
-                                "error": f"Room '{room_id}' is already booked for the event's time range."
-                            }
-                        }
-            else:
-                return {
-                    "status_code": 400,
-                    "body": {
-                        "error": f"Invalid event time range: start_date ({event_doc['start_date']}) > end_date ({event_doc['end_date']})."
-                    }
-                }
+            )
+        )
 
+        if overlapping_events:  # not empty
+            return {
+                "status_code": 400,
+                "body": {
+                    "error": f"Room '{room_id}' is already booked during the requested time range."
+                }
+            }
+
+    
         # ---- Build the event_doc after passing validations ----
         event_id = str(uuid.uuid4())
         event_doc = {

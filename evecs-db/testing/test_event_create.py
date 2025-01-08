@@ -86,15 +86,31 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         cls.users_container = cls.db.get_container_client(cls.users_container_name)
 
         # 3) Insert a test location doc (for use in all tests)
-        cls.location_id = f"loc_{uuid.uuid4()}"
-        cls.location_doc = {
-            "id": cls.location_id,
-            "location_id": cls.location_id,
-            "location_name": "Integration Test Location",
-            "capacity": 500,
-            "events_ids": []
+        cls.location_id = "ChIJVx6yK_RzdEgRWqDn24O08ek"
+        cls.valid_location_body = {
+            "location_id": "ChIJVx6yK_RzdEgRWqDn24O08ek",
+            "location_name": "EEE Building (B32)",
+            "events_ids": [
+                {
+                    "event_id": "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
+                }],
+            "rooms": [
+                {
+                    "room_id": "1015",
+                    "room_name": "Room 32/1015 - Lecture Theatre",
+                    "capacity": 426,
+                    "events_ids": [{"event_id": "54c7ff11-ae76-4644-a34b-e2966f4dbedb"}],
+                    "description": "Main lecture theatre"
+                },
+                {
+                    "room_id": "3077",
+                    "room_name": "Room 32/3077 - Seminar Room",
+                    "capacity": 40,
+                    "events_ids": [],
+                    "description": "Seminar Room with movable seats, whiteboard and projection"
+                }
+            ]
         }
-        cls.locations_container.create_item(cls.location_doc)
 
         # 4) Insert a test user doc with auth=True
         cls.user_id = f"user_{uuid.uuid4()}"
@@ -256,7 +272,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
-            "room_id": "1001",
+            "room_id": "1015",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 0,
@@ -276,7 +292,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "groups": ["COMP3200"],
             "desc": "Invalid URL for image",
             "location_id": self.location_id,
-            "room_id": "1001",
+            "room_id": "1015",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 10,
@@ -284,7 +300,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         resp = requests.post(endpoint_url, json=body_invalid_url)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
-        self.assertIn("img_url must be a valid URL or empty", resp.json()["error"])
+        self.assertIn("JSON schema validation error", resp.json()["error"])
 
     # 3.4. Check user.auth == True
     def test_user_auth_must_be_true(self):
@@ -419,8 +435,8 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             "name": "Event with optional fields",
             "groups": ["COMP3200"],
             "desc": "Testing tags + valid URL",
-            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
-            "room_id": "1001",
+            "location_id": self.location_id,
+            "room_id": "1015",
             "start_date": isoformat_now_plus(1),
             "end_date": isoformat_now_plus(2),
             "max_tick": 20,
@@ -431,43 +447,43 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         # POST to the endpoint
         resp = requests.post(endpoint_url, json=body)
         print(resp.json()) 
-        # self.assertIn(resp.status_code, [200, 201], f"Expected 200 or 201, got {resp.status_code}")
+        self.assertIn(resp.status_code, [200, 201], f"Expected 200 or 201, got {resp.status_code}")
 
-        # data = resp.json()
-        # self.assertEqual(data["result"], "success")
+        data = resp.json()
+        self.assertEqual(data["result"], "success")
 
-        # # Here is the server-generated event_id
-        # server_event_id = data["event_id"]  
-        # self.assertTrue(server_event_id, "Returned event_id is empty.")
+        # Here is the server-generated event_id
+        server_event_id = data["event_id"]  
+        self.assertTrue(server_event_id, "Returned event_id is empty.")
 
-        # # Confirm it is in the DB using the server's event_id
-        # try:
-        #     # 1) Build a SQL query to find the event by server_event_id
-        #     query = "SELECT * FROM c WHERE c.event_id = @event_id"
-        #     params = [{"name": "@event_id", "value": server_event_id}]
+        # Confirm it is in the DB using the server's event_id
+        try:
+            # 1) Build a SQL query to find the event by server_event_id
+            query = "SELECT * FROM c WHERE c.event_id = @event_id"
+            params = [{"name": "@event_id", "value": server_event_id}]
             
-        #     # 2) Execute the query
-        #     items = list(self.events_container.query_items(
-        #         query=query,
-        #         parameters=params,
-        #         enable_cross_partition_query=True
-        #     ))
+            # 2) Execute the query
+            items = list(self.events_container.query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
             
-        #     # 3) Check if any items were returned
-        #     if not items:
-        #         self.fail("Event not found in DB after creation.")
+            # 3) Check if any items were returned
+            if not items:
+                self.fail("Event not found in DB after creation.")
             
-        #     # 4) Grab the first matching document
-        #     event_doc = items[0]
-        #     print(f"Event doc: {event_doc}")
-        #     self.assertIsNotNone(event_doc)
-        #     self.assertEqual(event_doc["tags"], body["tags"])
+            # 4) Grab the first matching document
+            event_doc = items[0]
+            print(f"Event doc: {event_doc}")
+            self.assertIsNotNone(event_doc)
+            self.assertEqual(event_doc["tags"], body["tags"])
         
-        # except exceptions.CosmosHttpResponseError as e:
-        #     self.fail(f"An error occurred while querying the DB: {str(e)}")
+        except exceptions.CosmosHttpResponseError as e:
+            self.fail(f"An error occurred while querying the DB: {str(e)}")
 
-        # #Cleanup
-        # self._delete_event_in_db(server_event_id)
+        #Cleanup
+        self._delete_event_in_db(server_event_id)
 
 # TODO: Test cases for too small a room, a room already booked, etc.
 
