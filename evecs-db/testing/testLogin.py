@@ -22,12 +22,12 @@ class TestLogin(unittest.TestCase):
     FunctionAppKey = settings['Values']['FUNCTION_APP_KEY']
 
     testUser1 = {
-        "email": "test-user@gmail.com",
-        "password": "password123!!"
+        "email": "test@example.com",
+        "password": "SecurePass!!"
     }
     testUser2 = {
-        "email": "test-user2@gmail.com",
-        "password": "password123!!"
+        "email": "admin@example.com",
+        "password": "SecurePass!!"
     }
     testUser3 = {
         "email": "test-user3@gmail.com",
@@ -46,7 +46,7 @@ class TestLogin(unittest.TestCase):
     def test_login_valid_user1(self):
         response = requests.post(self.TEST_URL, json=self.testUser1, 
                                  headers={"x-functions-key": self.FunctionAppKey})
-
+        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["result"], f"User '{self.testUser1.get('email')}' has been logged in.")
     
@@ -97,12 +97,12 @@ class TestLogin(unittest.TestCase):
     
     def test_invalid_password(self):
         user = {
-            "email": "test-user@gmail.com",
+            "email": "admin@example.com",
             "password": "wrongpassord!!"
         }
         response = requests.post(self.TEST_URL, json=user, 
                                  headers={"x-functions-key": self.FunctionAppKey})
-
+        print(response.json())
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "Password is incorrect.")
 
