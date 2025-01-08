@@ -284,57 +284,90 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-def delete_event(req, EventsContainerProxy):
+def delete_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
-    Original delete_event logic.
+    Deletes an event from the database.
+    Input (JSON):
+      - event_id (required)
+      - user_id (required)
+    Output: { status_code: int, body: dict }
     """
     try:
-        if req.method == 'POST':
-            data = req.get_json()
-            event_id = data.get("event_id")
-            user_id = data.get("user_id")
-        else:
-            event_id = req.params.get("event_id")
-            user_id = req.params.get("user_id")
+        body = req.get_json()
+        event_id = body.get("event_id")
+        user_id = body.get("user_id")
 
+        # Check required fields
         if not event_id or not user_id:
             return {
                 "status_code": 400,
                 "body": {"error": "Missing event_id or user_id"}
             }
 
-        # Query the event by event_id
-        query = "SELECT * FROM c WHERE c.event_id = @event_id"
-        params = [{"name": "@event_id", "value": event_id}]
-        items = list(EventsContainerProxy.query_items(
-            query=query,
-            parameters=params,
+        # Check if user exists and is authorized
+        user_query = "SELECT * FROM c WHERE c.user_id = @u_id"
+        user_params = [{"name": "@u_id", "value": user_id}]
+        user_items = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
             enable_cross_partition_query=True
         ))
 
-        if not items:
+        if not user_items:
             return {
-                "status_code": 404,
-                "body": {"error": "Event not found"}
+                "status_code": 400,
+                "body": {"error": f"User '{user_id}' not found."}
             }
 
-        event_doc = items[0]
-
-        #Check if user is in the admin array
-        if user_id not in event_doc["creator_id"]:
+        user_doc = user_items[0]
+        if not user_doc.get("auth", False):
             return {
                 "status_code": 403,
-                "body": {"error": "Unauthorized: You are not an admin of this event."}
+                "body": {"error": "User is not authorized to delete events."}
             }
 
-        # Delete the event from the DB
-        EventsContainerProxy.delete_item(
-        item=event_doc["id"],           
-        partition_key=event_doc["event_id"])
+        # Get the event
+        event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+        event_params = [{"name": "@event_id", "value": event_id}]
+        event_items = list(EventsContainerProxy.query_items(
+            query=event_query,
+            parameters=event_params,
+            enable_cross_partition_query=True
+        ))
+
+        if not event_items:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Event '{event_id}' not found."}
+            }
+
+        event_doc = event_items[0]
+
+        # Get the location to update its events_ids
+        location_id = event_doc.get("location_id")
+        if location_id:
+            loc_query = "SELECT * FROM c WHERE c.location_id = @loc_id"
+            loc_params = [{"name": "@loc_id", "value": location_id}]
+            loc_items = list(LocationsContainerProxy.query_items(
+                query=loc_query,
+                parameters=loc_params,
+                enable_cross_partition_query=True
+            ))
+            
+            if loc_items:
+                location_doc = loc_items[0]
+                # Remove event from location's events_ids
+                location_doc["events_ids"] = [e for e in location_doc["events_ids"] 
+                                           if e.get("event_id") != event_id]
+                # Update location in database
+                LocationsContainerProxy.replace_item(item=location_doc, body=location_doc)
+
+        # Delete the event
+        EventsContainerProxy.delete_item(item=event_id, partition_key=event_id)
 
         return {
             "status_code": 200,
-            "body": {"result": "success"}
+            "body": {"message": f"Event '{event_id}' deleted successfully."}
         }
 
     except Exception as e:
