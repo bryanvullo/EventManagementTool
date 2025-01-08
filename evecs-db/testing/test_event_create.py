@@ -1,13 +1,5 @@
-# NOTE: The following still need testing
-
-# | event_crud.create_event
-# |   1. check location_id is not null and exists in DB  ----
-# |   2. check that the creator_id (user_id) is valid AND authorized  ----
-# |   3. create tickets and test that they are added to tickets partition
-# |   4. test that a created event is added to the locations partition
-
-#--------------------------------------SETUP----------------------------------------
 # test_event_crud.py
+
 import unittest
 import uuid
 import os
@@ -18,7 +10,6 @@ from azure.cosmos import CosmosClient, exceptions
 from datetime import datetime, timedelta
 from dateutil import tz
 from jsonschema.exceptions import ValidationError, SchemaError
-
 
 settings_file = os.path.join(os.path.dirname(__file__), '..', 'local.settings.json')
 with open(settings_file) as f:
@@ -52,15 +43,24 @@ mock_location_doc = {
     "events_ids": []
 }
 
-# ---------------------------------------TESTS---------------------------------------
+# ---------------------------------HELPER FUNCTIONS-----------------------------------
 def isoformat_now_plus(days_offset=0):
     """
     Return a string in the format: yyyy-MM-ddTHH:mm:ss.ffffffZ
-    (up to 6 fractional digits), always in UTC.
+    (up to 6 fractional digits), always in UTC, offset by N days.
     """
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
+def isoformat_fixed(year, month, day, hour, minute):
+    """
+    Helper to produce a fixed ISO8601 string in UTC for a specific date/time.
+    """
+    dt_utc = datetime(year, month, day, hour, minute, tzinfo=tz.UTC)
+    return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+
+# ---------------------------------------TESTS---------------------------------------
 class TestIntegrationCreateEvent(unittest.TestCase):
 
     @classmethod
@@ -87,13 +87,13 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
         # 3) Insert a test location doc (for use in all tests)
         cls.location_id = "ChIJVx6yK_RzdEgRWqDn24O08ek"
+        # This location doc is assumed present in the DB already for these tests:
         cls.valid_location_body = {
             "location_id": "ChIJVx6yK_RzdEgRWqDn24O08ek",
             "location_name": "EEE Building (B32)",
             "events_ids": [
-                {
-                    "event_id": "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
-                }],
+                {"event_id": "54c7ff11-ae76-4644-a34b-e2966f4dbedb"}
+            ],
             "rooms": [
                 {
                     "room_id": "1015",
@@ -112,7 +112,11 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             ]
         }
 
-        # 4) Insert a test user doc with auth=True
+        # 4) Known event that already exists in the DB (for conflict tests)
+        cls.conflicting_event_id = "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
+        cls.room_id_1015 = "1015"
+
+        # 5) Insert a test user doc with auth=True
         cls.user_id = f"user_{uuid.uuid4()}"
         cls.user_doc = {
             "id": cls.user_id,
@@ -124,32 +128,22 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         cls.users_container.create_item(cls.user_doc)
 
-        # 5) Base URL for your deployed Azure Function App (no trailing slash)
+        # 6) Base URL for your deployed Azure Function App (no trailing slash)
         cls.base_url = "http://localhost:7071/api"
         cls.deployment_url = "https://evecs.azurewebsites.net/api"
 
-        # 6) Load the function app key if needed (for Function-level auth)
+        # 7) Load the function app key if needed (for Function-level auth)
         cls.function_key = os.environ.get("FUNCTION_APP_KEY", "")
 
-        # 7) Event schema path
+        # 8) Event schema path
         cls.schema_path = os.path.join(os.path.dirname(__file__), '..', 'schemas', 'event.json')
 
     @classmethod
     def tearDownClass(cls):
         """
         tearDownClass runs once after all tests finish.
-        Clean up the location and user docs we created in the DB.
+        Clean up the user doc we created in the DB.
         """
-        try:
-            cls.locations_container.delete_item(
-                item=cls.location_id,
-                partition_key=cls.location_id
-            )
-        except exceptions.CosmosResourceNotFoundError:
-            pass
-        except Exception as e:
-            print(f"Error cleaning up location doc: {e}")
-
         try:
             cls.users_container.delete_item(
                 item=cls.user_id,
@@ -160,15 +154,25 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         except Exception as e:
             print(f"Error cleaning up user doc: {e}")
 
-    # ----------------------------------------------------------------
-    # Helper: Build URL with function key
-    # ----------------------------------------------------------------
     def _get_create_event_url(self) -> str:
         """
         Returns the 'create_event' endpoint with the function key appended.
         Example: https://evecs.azurewebsites.net/api/create_event?code=XYZ
         """
-        return f"{self.base_url}/create_event?code={self.function_key}"
+        if self.function_key:
+            return f"{self.base_url}/create_event?code={self.function_key}"
+        return f"{self.base_url}/create_event"
+
+    def _delete_event_in_db(self, event_id: str):
+        """
+        Clean-up helper to remove a created event from the events container.
+        """
+        try:
+            self.events_container.delete_item(event_id, partition_key=event_id)
+        except exceptions.CosmosResourceNotFoundError:
+            pass
+        except Exception as e:
+            print(f"Error cleaning up event '{event_id}': {e}")
 
     # ----------------------------------------------------------------
     # 1. Test that DB/partition connections work.
@@ -179,14 +183,14 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             list(self.events_container.read_all_items())
             list(self.locations_container.read_all_items())
             list(self.users_container.read_all_items())
-            # If we got here, we're presumably able to connect. We'll just assert True.
+            # If we got here, presumably we can connect. We'll just assert True.
             self.assertTrue(True)
         except Exception as e:
             self.fail(f"Database connection check failed: {e}")
 
     def test_events_schema(self):
         """
-        Test that the 'event.json' file itself is a valid JSON Schema.
+        Test that the 'event.json' file itself is valid JSON Schema (draft-07).
         """
         with open(self.schema_path, 'r') as f:
             schema = json.load(f)
@@ -211,15 +215,15 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             schema = json.load(f)
 
         valid_body = {
-            "event_id": str(uuid.uuid4()),         # required
-            "creator_id": [str(uuid.uuid4())],         # array of strings
+            "event_id": str(uuid.uuid4()),
+            "creator_id": [str(uuid.uuid4())],
             "name": "Integration Test Event",
             "groups": ["COMP3200", "COMP3666"],
             "desc": "This is a valid event document.",
             "location_id": "loc_456",
             "room_id": "1001",
-            "start_date": isoformat_now_plus(1),   # Tomorrow
-            "end_date": isoformat_now_plus(2),     # Day after tomorrow
+            "start_date": isoformat_now_plus(1),
+            "end_date": isoformat_now_plus(2),
             "max_tick": 100,
             "img_url": "https://example.com/image.png",
             "tags": ["lecture", "society"]
@@ -261,7 +265,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         data = resp.json()
         self.assertIn("Start date must be strictly before end date", data["error"])
 
-    # 3.2. max_tick > 0 
+    # 3.2. max_tick > 0
     def test_max_tick_positive(self):
         endpoint_url = self._get_create_event_url()
 
@@ -300,6 +304,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         }
         resp = requests.post(endpoint_url, json=body_invalid_url)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
+        # The schema validation error mentions "format": "uri", so look for "JSON schema validation error"
         self.assertIn("JSON schema validation error", resp.json()["error"])
 
     # 3.4. Check user.auth == True
@@ -362,24 +367,11 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         self.assertIn("Event name must be a string", error_msg)
 
         # Now test desc
-        body = {
-            "user_id": self.user_id,
-            "name": "Event with optional fields",
-            "groups": ["COMP3200"],
-            "desc": 123,
-            "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
-            "room_id": "1001",
-            "start_date": isoformat_now_plus(1),
-            "end_date": isoformat_now_plus(2),
-            "max_tick": 20,
-            "img_url": "https://example.com/event.png",
-            "tags": ["lecture", "music"]
-        }
-
+        body["name"] = "Event with optional fields"
+        body["desc"] = 123
         resp = requests.post(endpoint_url, json=body)
         self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
         self.assertIn("Event description must be a string", resp.json()["error"])
-
 
     # 3.6. group must be in valid_groups
     def test_group_must_be_in_valid_groups(self):
@@ -387,7 +379,7 @@ class TestIntegrationCreateEvent(unittest.TestCase):
         body = {
             "user_id": self.user_id,
             "name": "Event with optional fields",
-            "group": ["random_group"],
+            "group": ["random_group"],  # intentionally missing 'groups' -> triggers missing fields
             "desc": "Testing tags + valid URL",
             "location_id": "ChIJhbfAkaBzdEgRii3AIRj1Qp4",
             "room_id": "1001",
@@ -446,14 +438,14 @@ class TestIntegrationCreateEvent(unittest.TestCase):
 
         # POST to the endpoint
         resp = requests.post(endpoint_url, json=body)
-        print(resp.json()) 
+        print(resp.json())
         self.assertIn(resp.status_code, [200, 201], f"Expected 200 or 201, got {resp.status_code}")
 
         data = resp.json()
         self.assertEqual(data["result"], "success")
 
         # Here is the server-generated event_id
-        server_event_id = data["event_id"]  
+        server_event_id = data["event_id"]
         self.assertTrue(server_event_id, "Returned event_id is empty.")
 
         # Confirm it is in the DB using the server's event_id
@@ -461,43 +453,151 @@ class TestIntegrationCreateEvent(unittest.TestCase):
             # 1) Build a SQL query to find the event by server_event_id
             query = "SELECT * FROM c WHERE c.event_id = @event_id"
             params = [{"name": "@event_id", "value": server_event_id}]
-            
+
             # 2) Execute the query
             items = list(self.events_container.query_items(
                 query=query,
                 parameters=params,
                 enable_cross_partition_query=True
             ))
-            
+
             # 3) Check if any items were returned
             if not items:
                 self.fail("Event not found in DB after creation.")
-            
+
             # 4) Grab the first matching document
             event_doc = items[0]
             print(f"Event doc: {event_doc}")
             self.assertIsNotNone(event_doc)
             self.assertEqual(event_doc["tags"], body["tags"])
-        
+
         except exceptions.CosmosHttpResponseError as e:
             self.fail(f"An error occurred while querying the DB: {str(e)}")
 
-        #Cleanup
+        # Cleanup
         self._delete_event_in_db(server_event_id)
 
-# TODO: Test cases for too small a room, a room already booked, etc.
+    # ----------------------------------------------------------------
+    # 9) Room capacity checks
+    # ----------------------------------------------------------------
+
+    def test_check9_exceeding_room_capacity(self):
+        """
+        Try to add a new event with max_tick > room.capacity
+        We use room_id='3077' which has capacity=40 in the location doc.
+        Expect 400.
+        """
+        endpoint_url = self._get_create_event_url()
+        body = {
+            "user_id": self.user_id,
+            "name": "Event Exceeding Capacity",
+            "groups": ["COMP3200"],
+            "desc": "Testing room capacity check",
+            "location_id": self.location_id,
+            "room_id": "3077",  # capacity=40
+            "start_date": isoformat_fixed(2025, 5, 16, 12, 0),
+            "end_date": isoformat_fixed(2025, 5, 16, 13, 0),
+            "max_tick": 50,  # Exceed capacity
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture"]
+        }
+
+        resp = requests.post(endpoint_url, json=body)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
+        self.assertIn("cannot exceed room capacity", resp.text)
+
+    def test_check9_within_room_capacity(self):
+        """
+        Try to add a new event with max_tick <= room.capacity
+        We'll use room_id='3077' (capacity=40), max_tick=30.
+        Expect success (200/201/202).
+        """
+        endpoint_url = self._get_create_event_url()
+        body = {
+            "user_id": self.user_id,
+            "name": "Event Within Capacity",
+            "groups": ["COMP3200"],
+            "desc": "Testing capacity check OK",
+            "location_id": self.location_id,
+            "room_id": "3077",  # capacity=40
+            "start_date": isoformat_fixed(2025, 5, 16, 12, 0),
+            "end_date": isoformat_fixed(2025, 5, 16, 13, 0),
+            "max_tick": 30,  # within capacity
+            "img_url": "https://example.com/event.png",
+            "tags": ["lecture"]
+        }
+
+        resp = requests.post(endpoint_url, json=body)
+        self.assertIn(resp.status_code, [200, 201, 202], f"Expected 2xx, got {resp.status_code}")
+        if resp.status_code in [200, 201, 202]:
+            data = resp.json()
+            event_id = data.get("event_id")
+            if event_id:
+                self._delete_event_in_db(event_id)
 
     # ----------------------------------------------------------------
-    # Helper Methods
+    # 10) Room date/time conflict checks
     # ----------------------------------------------------------------
-    def _delete_event_in_db(self, event_id: str):
-        try:
-            self.events_container.delete_item(event_id, partition_key=event_id)
-        except exceptions.CosmosResourceNotFoundError:
-            pass
-        except Exception as e:
-            print(f"Error cleaning up event '{event_id}': {e}")
+    def test_check10_event_time_conflict(self):
+        """
+        Try to add a new event to room_id=1015 with a date conflict.
+          The existing event_id=54c7ff11-ae76-4644-a34b-e2966f4dbedb
+          has start=2024-05-16T10:00:00Z, end=2024-05-16T12:00:00Z
+        We'll overlap that time range (e.g. 2024-05-16T11:30:00Z to 2024-05-16T13:00:00Z).
+        Expect 400 for conflict.
+        """
+        endpoint_url = self._get_create_event_url()
+        body = {
+            "user_id": self.user_id,
+            "name": "Overlapping Event Test",
+            "groups": ["COMP3200"],
+            "desc": "This event overlaps the existing one",
+            "location_id": self.location_id,
+            "room_id": self.room_id_1015,
+            "start_date": "2024-05-16T11:30:00Z",
+            "end_date": "2024-05-16T13:00:00Z",
+            "max_tick": 20,
+            "img_url": "https://example.com/overlap.png",
+            "tags": ["lecture"]
+        }
 
+        resp = requests.post(endpoint_url, json=body)
+        self.assertEqual(resp.status_code, 400, f"Expected 400, got {resp.status_code}")
+        self.assertIn("already booked", resp.text)
+
+    def test_check10_no_event_time_conflict(self):
+        """
+        Try to add a new event to room_id=1015 without date conflict.
+          The existing event is 2024-05-16T10:00:00Z to 2024-05-16T12:00:00Z.
+        We'll schedule ours from 12:00 -> 13:00 (no overlap).
+        Expect 200/201/202 success.
+        """
+        endpoint_url = self._get_create_event_url()
+        body = {
+            "user_id": self.user_id,
+            "name": "Non-conflicting Event Test",
+            "groups": ["COMP3200"],
+            "desc": "Event starts exactly at 12:00, no conflict with existing event",
+            "location_id": self.location_id,
+            "room_id": self.room_id_1015,
+            "start_date": "2024-05-16T12:00:00Z",  # matches the end of the existing event
+            "end_date": "2024-05-16T13:00:00Z",
+            "max_tick": 20,
+            "img_url": "https://example.com/no_conflict.png",
+            "tags": ["lecture"]
+        }
+
+        resp = requests.post(endpoint_url, json=body)
+        self.assertIn(resp.status_code, [200, 201, 202], f"Expected 2xx, got {resp.status_code}")
+        if resp.status_code in [200, 201, 202]:
+            data = resp.json()
+            event_id = data.get("event_id")
+            if event_id:
+                self._delete_event_in_db(event_id)
+
+    # ----------------------------------------------------------------
+    # Additional helper methods
+    # ----------------------------------------------------------------
     def _delete_user_in_db(self, user_id: str):
         try:
             self.users_container.delete_item(user_id, partition_key=user_id)
