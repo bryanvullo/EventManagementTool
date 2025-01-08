@@ -61,7 +61,7 @@ def isoformat_fixed(year, month, day, hour, minute):
 
 
 # ---------------------------------------TESTS---------------------------------------
-class TestIntegrationCreateEvent(unittest.TestCase):
+class TestCreateEvent(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
