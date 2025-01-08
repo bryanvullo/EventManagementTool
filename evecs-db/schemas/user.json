@@ -25,8 +25,11 @@
       "description": "User's password. (Recommended to store a hash.)"
     },
     "groups": {
-      "type": "string",
-      "description": "Indicates the group of user. (e.g. society, lecture module code, etc.)"
+      "type": "array",
+      "description": "Array of groups associated with the event.",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "additionalProperties": true
