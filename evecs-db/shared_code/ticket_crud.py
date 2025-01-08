@@ -425,3 +425,86 @@ def update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContain
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
+    
+
+def validate_ticket(req, TicketsContainerProxy, UsersContainerProxy):
+    """ Validates a ticket by ticket_id and user_id, setting 'validated' to True. """
+    try:
+        # ------------------ 1) Check if ticket_id and user_id are provided ------------------
+        if req.method == "POST":
+            data = req.get_json()
+            ticket_id = data.get("ticket_id")
+            user_id = data.get("user_id")
+        else:  # 'GET'
+            ticket_id = req.params.get("ticket_id")
+            user_id = req.params.get("user_id")
+
+        if not ticket_id or not user_id:
+            return {
+                "status_code": 400,
+                "body": {"error": "Must provide both 'ticket_id' and 'user_id'."}
+            }
+
+        # ------------------ 2) Check if ticket_id and user_id exist in the database ------------------
+        # Query the ticket
+        ticket_query = "SELECT * FROM c WHERE c.ticket_id = @ticket_id"
+        ticket_params = [{"name": "@ticket_id", "value": ticket_id}]
+        ticket_items = list(TicketsContainerProxy.query_items(
+            query=ticket_query,
+            parameters=ticket_params,
+            enable_cross_partition_query=True
+        ))
+
+        if not ticket_items:
+            return {
+                "status_code": 404,
+                "body": {"error": f"Ticket '{ticket_id}' not found."}
+            }
+
+        # Query the user
+        user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
+        user_params = [{"name": "@user_id", "value": user_id}]
+        user_items = list(UsersContainerProxy.query_items(
+            query=user_query,
+            parameters=user_params,
+            enable_cross_partition_query=True
+        ))
+
+        if not user_items:
+            return {
+                "status_code": 404,
+                "body": {"error": f"User '{user_id}' not found."}
+            }
+
+        # ------------------ 3) Check if the user is the owner of the ticket ------------------
+        ticket_doc = ticket_items[0]  # We have at least one match
+        if ticket_doc["user_id"] != user_id:
+            return {
+                "status_code": 403,
+                "body": {"error": "User does not own this ticket."}
+            }
+
+        # ------------------ 4) Update the ticket to set validated to True ------------------
+        ticket_doc["validated"] = True
+
+        # Optional: Re-validate with ticket schema if you wish
+        jsonschema.validate(instance=ticket_doc, schema=TICKET_SCHEMA)
+
+        TicketsContainerProxy.replace_item(item=ticket_doc, body=ticket_doc)
+
+        return {
+            "status_code": 200,
+            "body": {"result": "Ticket validated successfully."}
+        }
+
+    except jsonschema.exceptions.ValidationError as e:
+        return {
+            "status_code": 400,
+            "body": {"error": f"JSON schema validation error: {str(e)}"}
+        }
+    except Exception as e:
+        logging.error(f"Error validating ticket: {str(e)}")
+        return {
+            "status_code": 500,
+            "body": {"error": "Internal Server Error"}
+        }
