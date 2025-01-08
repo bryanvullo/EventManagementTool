@@ -321,11 +321,6 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
 
         event_doc = event_items[0]
 
-
-        # Check if user is creator of event
-        if user_id not in event_doc.get("creator_id", []):
-
-
         # Check if user exists and get their auth status
         user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
         user_params = [{"name": "@user_id", "value": user_id}]
@@ -343,9 +338,8 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
 
         user_doc = user_items[0]
 
-        # Allow deletion if user is either an admin or the creator of the event
-        if not (user_doc.get("auth", False) or user_id in event_doc.get("creator_id", [])):
-
+        # Allow deletion if user is either an admin (auth=true) or the creator of the event
+        if not user_doc.get("auth", False) and user_id not in event_doc.get("creator_id", []):
             return {
                 "status_code": 403,
                 "body": {"error": "Unauthorized: You are not allowed to delete this event."}
