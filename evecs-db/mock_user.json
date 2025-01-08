@@ -1,9 +1,11 @@
 {
-"id": "34458144-3260-4242-8c6d-8cc64295f2cf",
-"user_id": "4825bd95-6545-442b-9a4e-642f65d8e234",
-"IP": "127.0.0.1",
-"email": "test@example.com",
-"auth": true,
-"password": "hashed_password", 
-"groups" : ["COMP3200"]
+    "id": "7ef177e5-17ef-4baa-940a-83ccd4bb33c7",
+    "user_id": "7ef177e5-17ef-4baa-940a-83ccd4bb33c7",
+    "IP": "0.0.0.0",
+    "email": "test@example.com",
+    "auth": false,
+    "password": "SecurePass!!",
+    "groups": [
+        "COMP3666"
+    ]
 }

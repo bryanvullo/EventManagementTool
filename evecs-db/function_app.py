@@ -137,7 +137,7 @@ def delete_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route = "validate_ticket", auth_level=func.AuthLevel.FUNCTION, methods=['POST'])
 def validate_ticket_endpoint(req: func.HttpRequest) -> func.HttpResponse:
-    result = validate_ticket(req, TicketsContainerProxy)
+    result = validate_ticket(req, TicketsContainerProxy, EventsContainerProxy)
     return func.HttpResponse(
         body=json.dumps(result["body"]),
         status_code=result["status_code"]

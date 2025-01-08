@@ -321,6 +321,11 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
 
         event_doc = event_items[0]
 
+
+        # Check if user is creator of event
+        if user_id not in event_doc.get("creator_id", []):
+
+
         # Check if user exists and get their auth status
         user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
         user_params = [{"name": "@user_id", "value": user_id}]
@@ -340,6 +345,7 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
 
         # Allow deletion if user is either an admin or the creator of the event
         if not (user_doc.get("auth", False) or user_id in event_doc.get("creator_id", [])):
+
             return {
                 "status_code": 403,
                 "body": {"error": "Unauthorized: You are not allowed to delete this event."}
@@ -566,6 +572,15 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                         "body": {"error": f"Invalid tag '{t}'. Must be one of {list(valid_tags)}."}
                     }
 
+
+        # (viii) code check
+        if "code" in event_doc:
+            if not isinstance(event_doc["code"], str):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "code must be a string."}
+                }
+
         # Add room validation after the existing validations
         # This should go after location_id validation (around line 483)
         if "room_id" in body or "location_id" in body or "max_tick" in body:
@@ -642,6 +657,7 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
                         }
                     }
 
+
         # 6) Validate updated doc with JSON schema
         jsonschema.validate(instance=event_doc, schema=EVENT_SCHEMA)
 
@@ -674,6 +690,7 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
     2. Only user_id: Check user exists, then return all events the user is subscribed to.
     3. Only event_id: Check event exists, then return that event.
     4. Both user_id and event_id: Check user is subscribed to the event, then return it.
+    5. Only code: Check event exists, then return that event.
     """
     try:
         # Extract parameters from request
@@ -681,10 +698,13 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             data = req.get_json()
             event_id = data.get("event_id")
             user_id = data.get("user_id")
+            code = data.get("code")
+            ticket_id = data.get("ticket_id")
         else:  # 'GET'
             event_id = req.params.get("event_id")
             user_id = req.params.get("user_id")
-
+            code = req.params.get("code")
+            ticket_id = req.params.get("ticket_id")
         # Check if user exists in DB
         if user_id:
             user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
@@ -790,9 +810,29 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             if not event_items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
             return {"status_code": 200, "body": event_items[0]}
+        
+        # Scenario 5: Only code => return that event
+        elif code:
+            query = "SELECT * FROM c WHERE c.code = @code"
+            params = [{"name": "@code", "value": code}]
+            items = list(EventsContainerProxy.query_items(
+                query=query, parameters=params, enable_cross_partition_query=True))
+            if not items:
+                return {"status_code": 404, "body": {"error": f"Event with code '{code}' not found."}}
+            return {"status_code": 200, "body": items[0]}
+
+        # Scenario 6: Only ticket_id => return that event
+        elif ticket_id:
+            query = "SELECT * FROM c WHERE c.ticket_id = @ticket_id"
+            params = [{"name": "@ticket_id", "value": ticket_id}]
+            items = list(EventsContainerProxy.query_items(
+                query=query, parameters=params, enable_cross_partition_query=True))
+            if not items:
+                return {"status_code": 404, "body": {"error": f"Event with ticket_id '{ticket_id}' not found."}}
+            return {"status_code": 200, "body": items[0]}
 
         else:
-            return {"status_code": 400, "body": {"error": "Invalid combination of user_id and event_id."}}
+            return {"status_code": 400, "body": {"error": "Invalid combination of inputs."}}
 
     except Exception as e:
         logging.error(f"Error in get_event: {str(e)}")

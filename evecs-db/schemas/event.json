@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Unique identifier for the event."
     },
+    "code": {
+      "type": "string",
+      "description": "Unique code for the event."
+    },
     "creator_id": {
       "type": "array",
       "description": "Array of user IDs who are event owners or admins.",

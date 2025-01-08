@@ -5,6 +5,7 @@ import json
 import jsonschema
 import uuid
 from urllib.parse import urlparse
+import traceback
 
 def load_ticket_schema():
     # Load ticket schema for validation
@@ -427,26 +428,27 @@ def update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContain
         }
     
 
-def validate_ticket(req, TicketsContainerProxy, UsersContainerProxy):
-    """ Validates a ticket by ticket_id and user_id, setting 'validated' to True. """
+def validate_ticket(req, TicketsContainerProxy, EventsContainerProxy):
+    """ Validates a ticket by checking ticket ownership and event code """
     try:
-        # ------------------ 1) Check if ticket_id and user_id are provided ------------------
+        # ------------------ 1) Check if ticket_id, user_id and code are provided ------------------
         if req.method == "POST":
             data = req.get_json()
             ticket_id = data.get("ticket_id")
             user_id = data.get("user_id")
+            code = data.get("code")
         else:  # 'GET'
             ticket_id = req.params.get("ticket_id")
             user_id = req.params.get("user_id")
+            code = req.params.get("code")
 
-        if not ticket_id or not user_id:
+        if not ticket_id or not user_id or not code:
             return {
                 "status_code": 400,
-                "body": {"error": "Must provide both 'ticket_id' and 'user_id'."}
+                "body": {"error": "Must provide 'ticket_id', 'user_id', and 'code'."}
             }
 
-        # ------------------ 2) Check if ticket_id and user_id exist in the database ------------------
-        # Query the ticket
+        # ------------------ 2) Get ticket document ------------------
         ticket_query = "SELECT * FROM c WHERE c.ticket_id = @ticket_id"
         ticket_params = [{"name": "@ticket_id", "value": ticket_id}]
         ticket_items = list(TicketsContainerProxy.query_items(
@@ -454,56 +456,74 @@ def validate_ticket(req, TicketsContainerProxy, UsersContainerProxy):
             parameters=ticket_params,
             enable_cross_partition_query=True
         ))
-
+        
         if not ticket_items:
             return {
                 "status_code": 404,
-                "body": {"error": f"Ticket '{ticket_id}' not found."}
+                "body": {"error": "Ticket not found."}
             }
+        
+        ticket_doc = ticket_items[0]
 
-        # Query the user
-        user_query = "SELECT * FROM c WHERE c.user_id = @user_id"
-        user_params = [{"name": "@user_id", "value": user_id}]
-        user_items = list(UsersContainerProxy.query_items(
-            query=user_query,
-            parameters=user_params,
-            enable_cross_partition_query=True
-        ))
-
-        if not user_items:
-            return {
-                "status_code": 404,
-                "body": {"error": f"User '{user_id}' not found."}
-            }
-
-        # ------------------ 3) Check if the user is the owner of the ticket ------------------
-        ticket_doc = ticket_items[0]  # We have at least one match
+        # ------------------ 3) Verify ticket ownership ------------------
         if ticket_doc["user_id"] != user_id:
             return {
                 "status_code": 403,
-                "body": {"error": "User does not own this ticket."}
+                "body": {"error": "User is not the ticket owner."}
             }
 
-        # ------------------ 4) Update the ticket to set validated to True ------------------
+        # ------------------ 4) Get associated event ------------------
+        event_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+        event_params = [{"name": "@event_id", "value": ticket_doc["event_id"]}]
+        event_items = list(EventsContainerProxy.query_items(
+            query=event_query,
+            parameters=event_params,
+            enable_cross_partition_query=True
+        ))
+        
+        if not event_items:
+            return {
+                "status_code": 404,
+                "body": {"error": "Associated event not found."}
+            }
+
+        event_doc = event_items[0]
+
+        # ------------------ 5) Validate event code ------------------
+        if "code" not in event_doc or event_doc["code"] != code:
+            return {
+                "status_code": 403,
+                "body": {"error": "Invalid event code."}
+            }
+
+        # ------------------ 6) Update ticket validation status ------------------
         ticket_doc["validated"] = True
 
-        # Optional: Re-validate with ticket schema if you wish
-        jsonschema.validate(instance=ticket_doc, schema=TICKET_SCHEMA)
+        # Validate against schema before updating
+        try:
+            jsonschema.validate(instance=ticket_doc, schema=TICKET_SCHEMA)
+        except jsonschema.exceptions.ValidationError as e:
+            return {
+                "status_code": 400,
+                "body": {"error": f"Validation error: {str(e)}"}
+            }
 
-        TicketsContainerProxy.replace_item(item=ticket_doc, body=ticket_doc)
+        # Update the ticket in the database
+        try:
+            TicketsContainerProxy.replace_item(item=ticket_doc, body=ticket_doc)
+        except Exception as e:
+            return {
+                "status_code": 500,
+                "body": {"error": f"Failed to update ticket: {str(e)}"}
+            }
 
         return {
             "status_code": 200,
             "body": {"result": "Ticket validated successfully."}
         }
 
-    except jsonschema.exceptions.ValidationError as e:
-        return {
-            "status_code": 400,
-            "body": {"error": f"JSON schema validation error: {str(e)}"}
-        }
     except Exception as e:
-        logging.error(f"Error validating ticket: {str(e)}")
+        logging.error(f"Error validating ticket: {str(e)}\n{traceback.format_exc()}")
         return {
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
