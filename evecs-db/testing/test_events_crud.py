@@ -540,8 +540,8 @@ class TestIntegrationEventUpdateDelete(unittest.TestCase):
                 "desc": "Testing delete logic",
                 "location_id": self.location_id,
                 "room_id": self.room_id_3023,
-                "start_date": isoformat_now_plus(20),
-                "end_date": isoformat_now_plus(21),
+                "start_date": isoformat_now_plus(30),
+                "end_date": isoformat_now_plus(31),
                 "max_tick": 20,
                 "img_url": "https://example.com/event.png",
                 "tags": ["Lecture", "Music"]
@@ -708,10 +708,10 @@ class TestIntegrationEventUpdateDelete(unittest.TestCase):
             for i, (body_, exp_status, exp_error_frag) in enumerate(test_payloads, start=1):
                 with self.subTest(f"Update scenario {i} => {body_}"):
                     up_resp = requests.post(self.update_event_url, json=body_)
-                    #self.assertEqual(up_resp.status_code, exp_status)
+                    self.assertEqual(up_resp.status_code, exp_status)
                     resp_json = up_resp.json()
-                    print(resp_json)
-                    #self.assertIn(exp_error_frag, resp_json.get("error", ""))
+                    #print(resp_json)
+                    self.assertIn(exp_error_frag, resp_json.get("error", ""))
         finally:
             if event_id:
                 self._delete_event_in_db(event_id)

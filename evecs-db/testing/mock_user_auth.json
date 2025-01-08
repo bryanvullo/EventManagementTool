@@ -1,0 +1,12 @@
+{
+    "id": "836312bf-4d40-449e-a0ab-90c8c4f988a4",
+    "user_id": "836312bf-4d40-449e-a0ab-90c8c4f988a4",
+    "IP": "0.0.0.0",
+    "email": "admin@example.com",
+    "auth": true,
+    "password": "SecurePass!!",
+    "groups": [
+        "COMP3200",
+        "COMP3227"
+    ]
+}
