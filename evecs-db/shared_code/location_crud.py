@@ -187,14 +187,21 @@ def delete_location(req, LocationsContainerProxy):
 def get_location(req, LocationsContainerProxy, location_schema=location_schema):
     """
     Gets location(s) from the database.
-    Input (JSON):
+    Input:
       - location_id (optional): if provided, returns specific location
                               if not provided, returns all locations
+    Can be called via GET or POST.
+    For GET: use query parameters
+    For POST: use JSON body
     Output: { status_code: int, body: dict }
     """
     try:
-        body = req.get_json() if req.get_json() else {}
-        location_id = body.get("location_id")
+        # Handle both GET and POST methods
+        if req.method == 'GET':
+            location_id = req.params.get("location_id") if req.params else None
+        else:  # POST
+            body = req.get_json() if req.get_json() else {}
+            location_id = body.get("location_id")
 
         if location_id:
             # Get specific location
