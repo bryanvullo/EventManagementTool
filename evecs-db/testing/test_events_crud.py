@@ -744,8 +744,8 @@ class TestGetEvent(unittest.TestCase):
         cls.tickets_container = cls.db.get_container_client(cls.tickets_container_name)
 
         # 3) Known existing event/user from sample data
-        cls.existing_event_id = "54c7ff11-ae76-4644-a34b-e2966f4dbedb"
-        cls.existing_user_id = "e99c0fc0-e800-48db-b358-c9106f216a12"
+        cls.existing_event_id = "65e508ff-b12b-4089-993d-fb7a87107c26"
+        cls.existing_user_id = "836312bf-4d40-449e-a0ab-90c8c4f988a4"
 
         # 4) Build get_event URL
         cls.base_url = "http://localhost:7071/api/get_event"
