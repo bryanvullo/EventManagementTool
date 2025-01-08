@@ -71,7 +71,8 @@ def register_user(req, UsersContainerProxy):
             "IP": "0.0.0.0",
             "email": email,
             "auth": auth,
-            "password": password
+            "password": password,
+            "groups": []  # Initialize empty groups array
         }
 
         # Insert into Cosmos DB
@@ -150,7 +151,7 @@ def login_user(req, UsersContainerProxy):
 def update_user(req, UsersContainerProxy):
     """
     Updates a user's info.
-    Updatable fields: email, password, auth
+    Updatable fields: email, password, auth, groups
     Input (JSON):
       - user_id OR current email to locate user
       - (any of the updatable fields)
@@ -248,6 +249,16 @@ def update_user(req, UsersContainerProxy):
                     "body": {"error": "auth must be a boolean (true/false)."}
                 }
             user_doc["auth"] = new_auth
+            updated_anything = True
+
+        # 4) Check groups
+        if "groups" in body:
+            if not isinstance(body["groups"], list):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "groups must be an array."}
+                }
+            user_doc["groups"] = body["groups"]
             updated_anything = True
 
         if not updated_anything:
