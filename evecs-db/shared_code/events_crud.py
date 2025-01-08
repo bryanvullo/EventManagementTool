@@ -643,6 +643,7 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             if not items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
             
+            # getting event location name
             event = items[0]
             location_id = event.get("location_id")
             result = list(LocationsContainerProxy.query_items(
