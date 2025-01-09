@@ -2,7 +2,12 @@ import subprocess
 import csv
 import os
 from datetime import datetime
+import sys
 from tqdm import tqdm  # pip install tqdm
+
+# Add repository root to path
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(repo_root)
 
 def get_git_config_value(key):
     """Get value from git config"""
