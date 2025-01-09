@@ -811,9 +811,10 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             if not items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
             
-            # Add location name
+            # Add location name and room name
             event = items[0]
             location_id = event.get("location_id")
+            room_id = event.get("room_id")
             if location_id:
                 location_items = list(LocationsContainerProxy.query_items(
                     query="SELECT * FROM c WHERE c.location_id = @loc_id",
@@ -821,7 +822,13 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
                     enable_cross_partition_query=True
                 ))
                 if location_items:
-                    event["location_name"] = location_items[0].get("location_name")
+                    location = location_items[0]
+                    event["location_name"] = location.get("location_name")
+                    if room_id and "rooms" in location:
+                        for room in location["rooms"]:
+                            if room["room_id"] == room_id:
+                                event["room_name"] = room.get("room_name")
+                                break
 
             return {"status_code": 200, "body": event}
 
@@ -844,7 +851,27 @@ def get_event(req, EventsContainerProxy, TicketsContainerProxy, UsersContainerPr
             ))
             if not event_items:
                 return {"status_code": 404, "body": {"error": f"Event '{event_id}' not found."}}
-            return {"status_code": 200, "body": event_items[0]}
+
+            # Add location name and room name
+            event = event_items[0]
+            location_id = event.get("location_id")
+            room_id = event.get("room_id")
+            if location_id:
+                location_items = list(LocationsContainerProxy.query_items(
+                    query="SELECT * FROM c WHERE c.location_id = @loc_id",
+                    parameters=[{"name": "@loc_id", "value": location_id}],
+                    enable_cross_partition_query=True
+                ))
+                if location_items:
+                    location = location_items[0]
+                    event["location_name"] = location.get("location_name")
+                    if room_id and "rooms" in location:
+                        for room in location["rooms"]:
+                            if room["room_id"] == room_id:
+                                event["room_name"] = room.get("room_name")
+                                break
+
+            return {"status_code": 200, "body": event}
         
         # Scenario 5: Only code => return that event
         elif code:

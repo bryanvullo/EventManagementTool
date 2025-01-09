@@ -1000,6 +1000,9 @@ class TestGetEvent(unittest.TestCase):
 
         data = resp.json()
         self.assertEqual(data["event_id"], self.existing_event_id)
+        self.assertIn("location_name", data, "Response should include location_name")
+        self.assertIn("room_name", data, "Response should include room_name")
+        self.assertIsInstance(data["room_name"], str, "room_name should be a string")
 
         # Random event_id => 404
         random_id = str(uuid.uuid4())
@@ -1022,6 +1025,9 @@ class TestGetEvent(unittest.TestCase):
 
         data = resp.json()
         self.assertEqual(data["event_id"], self.existing_event_id)
+        self.assertIn("location_name", data, "Response should include location_name")
+        self.assertIn("room_name", data, "Response should include room_name")
+        self.assertIsInstance(data["room_name"], str, "room_name should be a string")
 
         # Cleanup
         try:
