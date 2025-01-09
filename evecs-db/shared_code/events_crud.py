@@ -9,6 +9,8 @@ import traceback
 from datetime import timedelta, datetime
 from dateutil import parser, tz
 from urllib.parse import urlparse
+import string
+import random
 
 from shared_code.ticket_crud import get_ticket
 
@@ -35,6 +37,7 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
+# TODO: Insert Alphanumeric code when event is created
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
     Create a new event, performing various business logic validations.
@@ -224,9 +227,12 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
     
         # ---- Build the event_doc after passing validations ----
         event_id = str(uuid.uuid4())
+        # Generate 6 digit alphanumeric code for event validation
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         event_doc = {
             "id": event_id,
             "event_id": event_id,
+            "code": code,
             "creator_id": [body["user_id"]],  # storing as a list
             "name": body["name"],
             "groups": body["groups"],

@@ -418,3 +418,7 @@ def get_account_details(req, UsersContainerProxy, EventsContainerProxy, TicketsC
             "status_code": 500,
             "body": {"error": "Internal Server Error"}
         }
+    
+    #get user id from email
+    # get ticket
+    # update ticket
