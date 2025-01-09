@@ -10,7 +10,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError, SchemaError
 from azure.cosmos import CosmosClient, exceptions
 
-deployment = False  # Flag to switch between local and deployed endpoints
+deployment = True  # Flag to switch between local and deployed endpoints
 local_url = "http://localhost:7071/api"
 deployment_url = "https://evecs.azurewebsites.net/api"
 function_app_key = os.environ.get("FUNCTION_APP_KEY", "")

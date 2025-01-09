@@ -181,8 +181,8 @@ class TestTicketCrud(unittest.TestCase):
         print(validate_resp)
         
         # # 3. Check response
-        # self.assertEqual(validate_resp.status_code, 200)
-        # self.assertIn("Ticket authorized successfully", validate_resp.json()["result"])
+        self.assertEqual(validate_resp.status_code, 200)
+        self.assertIn("Ticket validated successfully", validate_resp.json()["result"])
 
         #Cleanup
         self._delete_ticket(ticket_id)
