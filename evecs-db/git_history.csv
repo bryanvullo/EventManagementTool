@@ -1,0 +1,2040 @@
+Hash,Author,Email,Date,Message,Branches,Code Changes
+6531e3a9a55c86f5547561ffc8c4a454b76fd1a7,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-09 01:15:20,Merge branch 'albe',albe;   main,"commit 6531e3a9a55c86f5547561ffc8c4a454b76fd1a7
+Merge: 0ef2f8f adf4344
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Thu Jan 9 01:15:20 2025 +0000
+
+    Merge branch 'albe'
+
+ evecs-db/shared_code/events_crud.py  |   6 +
+ evecs-db/shared_code/ticket_crud.py  |   2 +-
+ evecs-db/testing/gym.json            |  35 ++++
+ evecs-db/testing/stags.json          |  28 +++
+ evecs-db/testing/test_events_crud.py | 337 ++++++++++++++++++-----------------
+ 5 files changed, 243 insertions(+), 165 deletions(-)
+"
+adf43446776c969d9bee6d2e212eafa2e81453a9,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-09 01:12:56,tested deployment of events crud and added code generation during event_create to support attendance monitoring,albe;   main,"commit adf43446776c969d9bee6d2e212eafa2e81453a9
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Thu Jan 9 01:12:56 2025 +0000
+
+    tested deployment of events crud and added code generation during event_create to support attendance monitoring
+
+ evecs-db/shared_code/events_crud.py  |   6 +
+ evecs-db/shared_code/login_crud.py   |   6 +-
+ evecs-db/shared_code/ticket_crud.py  |   2 +-
+ evecs-db/testing/test_events_crud.py | 337 ++++++++++++++++++-----------------
+ 4 files changed, 185 insertions(+), 166 deletions(-)
+"
+f0c4888f29c35304662e56bd9412c3f237d6613b,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 23:18:41,ehem,albe;   main,"commit f0c4888f29c35304662e56bd9412c3f237d6613b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 23:18:41 2025 +0000
+
+    ehem
+    
+    meh
+
+ evecs-db/testing/gym.json   | 35 +++++++++++++++++++++++++++++++++++
+ evecs-db/testing/stags.json | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
+"
+0ef2f8fa380f6be5779843357fd210e0da50edbd,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 22:49:33,Merge pull request #37 from bryanvullo/patrick,albe;   main,"commit 0ef2f8fa380f6be5779843357fd210e0da50edbd
+Merge: 08b9a86 1acb662
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 22:49:33 2025 +0000
+
+    Merge pull request #37 from bryanvullo/patrick
+    
+    Added get user id from email endpoint
+
+ evecs-db/function_app.py           | 10 +++++-
+ evecs-db/shared_code/login_crud.py | 68 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 77 insertions(+), 1 deletion(-)
+"
+1acb662ecd765b939ad3bff4a4f053e805d68514,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 22:48:48,Added get user id from email endpoint,albe;   main,"commit 1acb662ecd765b939ad3bff4a4f053e805d68514
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 22:48:48 2025 +0000
+
+    Added get user id from email endpoint
+
+ evecs-db/function_app.py           | 10 +++++-
+ evecs-db/shared_code/login_crud.py | 68 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 77 insertions(+), 1 deletion(-)
+"
+08b9a8615a1f16b47219c24303eae53ffde1ecb2,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 22:47:02,Refined login/register logic to return user data after operation,albe;   main,"commit 08b9a8615a1f16b47219c24303eae53ffde1ecb2
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 22:47:02 2025 +0000
+
+    Refined login/register logic to return user data after operation
+
+ evecs-db/shared_code/login_crud.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+"
+58d7c74b2edbdcb8479e579fa19084464f178ccb,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 21:55:10,This commit fixes the test_events_crud.py file to use the correct user_id for the delete event request.,albe;   main,"commit 58d7c74b2edbdcb8479e579fa19084464f178ccb
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 21:55:10 2025 +0000
+
+    This commit fixes the test_events_crud.py file to use the correct user_id for the delete event request.
+
+ evecs-db/{ => testing}/mock_user.json |  0
+ evecs-db/testing/mock_user_auth.json  | 12 ++++++++++++
+ evecs-db/testing/test_events_crud.py  | 10 +++++-----
+ 3 files changed, 17 insertions(+), 5 deletions(-)
+"
+42447d5724afc671b3e7ee51e66dc83a830b0ae8,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 21:42:11,Solving event crud tests,albe;   main,"commit 42447d5724afc671b3e7ee51e66dc83a830b0ae8
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 21:42:11 2025 +0000
+
+    Solving event crud tests
+
+ evecs-db/schemas/request.json        |  1 +
+ evecs-db/shared_code/events_crud.py  | 94 ++++++++++++++++++++++--------------
+ evecs-db/testing/test_events_crud.py | 64 ++++++++++++------------
+ 3 files changed, 92 insertions(+), 67 deletions(-)
+"
+79c6e69df580222162deed5d183b0881c2ef0867,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 20:51:34,Merge pull request #36 from bryanvullo/patrick,albe;   main,"commit 79c6e69df580222162deed5d183b0881c2ef0867
+Merge: 9d63bcc 7a04b9d
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 20:51:34 2025 +0000
+
+    Merge pull request #36 from bryanvullo/patrick
+    
+    Patrick
+
+ evecs-db/shared_code/events_crud.py | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+"
+7a04b9dd3ff3fc3d482d40cd4ab35e212cbbdb36,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 20:50:18,Fixed delete event,albe;   main,"commit 7a04b9dd3ff3fc3d482d40cd4ab35e212cbbdb36
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 20:50:18 2025 +0000
+
+    Fixed delete event
+
+ evecs-db/shared_code/events_crud.py | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+"
+1250ccd2f402129b9319472b6c6617c12e69bcf2,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 20:47:01,Fixed indentatio error,albe;   main,"commit 1250ccd2f402129b9319472b6c6617c12e69bcf2
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 20:47:01 2025 +0000
+
+    Fixed indentatio error
+
+ evecs-db/shared_code/events_crud.py | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+"
+9d63bcc91d5e27dde7ec2da28309a5015083395d,Abe,53017462+totoberni@users.noreply.github.com,2025-01-08 20:35:46,Merge pull request #35 from bryanvullo/albe,albe;   main,"commit 9d63bcc91d5e27dde7ec2da28309a5015083395d
+Merge: 2ec5ad8 4a261b0
+Author: Abe <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 20:35:46 2025 +0000
+
+    Merge pull request #35 from bryanvullo/albe
+    
+    Albe almost broke it booooo
+
+ evecs-db/function_app.py             |   2 +-
+ evecs-db/mock_user.json              |  16 +-
+ evecs-db/schemas/event.json          |   4 +
+ evecs-db/shared_code/events_crud.py  |  44 +++++-
+ evecs-db/shared_code/ticket_crud.py  |  84 ++++++----
+ evecs-db/testing/test_events_crud.py | 108 +++++++------
+ evecs-db/testing/test_ticket_crud.py | 291 +++++++++++++++++++++++++++++++++++
+ 7 files changed, 451 insertions(+), 98 deletions(-)
+"
+4a261b0ca5fb8135e0eca588df69ddbee8d87e4f,Abe,53017462+totoberni@users.noreply.github.com,2025-01-08 20:35:25,Merge branch 'main' into albe,albe;   main,"commit 4a261b0ca5fb8135e0eca588df69ddbee8d87e4f
+Merge: 6182ca5 2ec5ad8
+Author: Abe <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 20:35:25 2025 +0000
+
+    Merge branch 'main' into albe
+
+ evecs-db/function_app.py            |  16 +++--
+ evecs-db/schemas/event.json         |   2 +-
+ evecs-db/shared_code/events_crud.py | 136 ++++++++++++++++++++++++++++++++++--
+ 3 files changed, 143 insertions(+), 11 deletions(-)
+"
+2ec5ad86e8243f7d5a9dcb4fbf6059f7d9549ed4,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 20:14:33,Fixed update event,albe;   main,"commit 2ec5ad86e8243f7d5a9dcb4fbf6059f7d9549ed4
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 20:14:33 2025 +0000
+
+    Fixed update event
+
+ evecs-db/schemas/event.json         | 2 +-
+ evecs-db/shared_code/events_crud.py | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+"
+a210ec0e679165ce45009181c5997fb3bea9a5ac,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 19:40:59,Fixed tags for update event,albe;   main,"commit a210ec0e679165ce45009181c5997fb3bea9a5ac
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 19:40:59 2025 +0000
+
+    Fixed tags for update event
+
+ evecs-db/shared_code/events_crud.py | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
+"
+6182ca55b9d4d4805dd5c1b739675c518e9c2d23,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 19:39:38,obsessed over tests,albe;   main,"commit 6182ca55b9d4d4805dd5c1b739675c518e9c2d23
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 19:39:38 2025 +0000
+
+    obsessed over tests
+
+ evecs-db/testing/test_events_crud.py | 84 ++++++++++++++++++------------------
+ 1 file changed, 43 insertions(+), 41 deletions(-)
+"
+d0c3bb070860dbd795612236b38c373e48858e6c,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 19:25:19,Fixed delete event,albe;   main,"commit d0c3bb070860dbd795612236b38c373e48858e6c
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 19:25:19 2025 +0000
+
+    Fixed delete event
+
+ evecs-db/function_app.py            |  16 ++++--
+ evecs-db/shared_code/events_crud.py | 101 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 108 insertions(+), 9 deletions(-)
+"
+4949f6aef6edcb0bfbc7f442fa7c7d6bd7829cd0,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:54:22,Fixed location,albe;   main,"commit 4949f6aef6edcb0bfbc7f442fa7c7d6bd7829cd0
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:54:22 2025 +0000
+
+    Fixed location
+
+ evecs-db/shared_code/location_crud.py | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+"
+71014b62df589cc638a67cd8f41eb1d6aebcb7dc,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:27:00,Fixed delete event and update event,albe;   main,"commit 71014b62df589cc638a67cd8f41eb1d6aebcb7dc
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:27:00 2025 +0000
+
+    Fixed delete event and update event
+
+ evecs-db/shared_code/events_crud.py | 68 ++++++++++---------------------------
+ 1 file changed, 17 insertions(+), 51 deletions(-)
+"
+0d2800722b6cbb33be088cc3328acdf4bb6b91ee,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:03:23,Any admin can delete an event,albe;   main,"commit 0d2800722b6cbb33be088cc3328acdf4bb6b91ee
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:03:23 2025 +0000
+
+    Any admin can delete an event
+
+ evecs-db/shared_code/events_crud.py | 89 +++++++++++++++++++++++++------------
+ 1 file changed, 61 insertions(+), 28 deletions(-)
+"
+3192a93b774d15d895d9d91c0b802b2c178d2389,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 19:20:41,Tested and fixed validate_ticket logic,albe;   main,"commit 3192a93b774d15d895d9d91c0b802b2c178d2389
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 19:20:41 2025 +0000
+
+    Tested and fixed validate_ticket logic
+
+ evecs-db/function_app.py             |   2 +-
+ evecs-db/mock_user.json              |  16 +-
+ evecs-db/schemas/event.json          |   4 +
+ evecs-db/shared_code/events_crud.py  |  36 ++++-
+ evecs-db/shared_code/ticket_crud.py  |  84 ++++++----
+ evecs-db/testing/test_events_crud.py |  26 ++--
+ evecs-db/testing/test_ticket_crud.py | 291 +++++++++++++++++++++++++++++++++++
+ 7 files changed, 401 insertions(+), 58 deletions(-)
+"
+f3843d8950a1828287873336cb5de6627e519b14,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:54:22,Fixed location,albe;   main,"commit f3843d8950a1828287873336cb5de6627e519b14
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:54:22 2025 +0000
+
+    Fixed location
+
+ evecs-db/shared_code/location_crud.py | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+"
+f5b6e05638e67655da672e20b3a0b5240b412f91,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:27:00,Fixed delete event and update event,albe;   main,"commit f5b6e05638e67655da672e20b3a0b5240b412f91
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:27:00 2025 +0000
+
+    Fixed delete event and update event
+
+ evecs-db/shared_code/events_crud.py | 68 ++++++++++---------------------------
+ 1 file changed, 17 insertions(+), 51 deletions(-)
+"
+9173515b45aa6b9c8c63f8253c797617afad6867,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 18:03:23,Any admin can delete an event,albe;   main,"commit 9173515b45aa6b9c8c63f8253c797617afad6867
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 18:03:23 2025 +0000
+
+    Any admin can delete an event
+
+ evecs-db/shared_code/events_crud.py | 89 +++++++++++++++++++++++++------------
+ 1 file changed, 61 insertions(+), 28 deletions(-)
+"
+b81927ed5d8b0365bcb0a4d10c8d16078b9bda02,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 17:31:35,Merge branch 'albe',albe;   main,"commit b81927ed5d8b0365bcb0a4d10c8d16078b9bda02
+Merge: 9095b11 0e0df31
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 17:31:35 2025 +0000
+
+    Merge branch 'albe'
+
+ evecs-db/function_app.py            |  9 +++-
+ evecs-db/shared_code/events_crud.py |  6 ++-
+ evecs-db/shared_code/ticket_crud.py | 83 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 95 insertions(+), 3 deletions(-)
+"
+0e0df31b7f4c8c8531a12581a7824439964b37a7,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 17:30:46,Changed valid stuff from events crud,albe;   main,"commit 0e0df31b7f4c8c8531a12581a7824439964b37a7
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 17:30:46 2025 +0000
+
+    Changed valid stuff from events crud
+
+ evecs-db/shared_code/events_crud.py | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+"
+00a30178a5459709cd26c750576a1aabfa2b7385,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 17:22:26,Tested location CRUD,albe;   main,"commit 00a30178a5459709cd26c750576a1aabfa2b7385
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 17:22:26 2025 +0000
+
+    Tested location CRUD
+
+ evecs-db/function_app.py              |  26 ++---
+ evecs-db/shared_code/location_crud.py | 175 +++++++---------------------------
+ 2 files changed, 44 insertions(+), 157 deletions(-)
+"
+9095b112820ebd6cc358c8bcf6836429df2f7a33,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 17:23:14,Merge pull request #27 from bryanvullo/patrick,albe;   main,"commit 9095b112820ebd6cc358c8bcf6836429df2f7a33
+Merge: 2b2ab36 7e84d31
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 17:23:14 2025 +0000
+
+    Merge pull request #27 from bryanvullo/patrick
+    
+    Tested location CRUD
+
+ evecs-db/function_app.py              |  26 ++---
+ evecs-db/shared_code/location_crud.py | 175 +++++++---------------------------
+ 2 files changed, 44 insertions(+), 157 deletions(-)
+"
+4142c44e63ba2ce486a6bc0dec5864619e13a9f8,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 17:23:10,Added validate_ticket logic. Needs to check against a code so might need more checks,albe;   main,"commit 4142c44e63ba2ce486a6bc0dec5864619e13a9f8
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 17:23:10 2025 +0000
+
+    Added validate_ticket logic. Needs to check against a code so might need more checks
+
+ evecs-db/function_app.py            |  9 +++-
+ evecs-db/shared_code/events_crud.py |  2 +-
+ evecs-db/shared_code/ticket_crud.py | 83 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 92 insertions(+), 2 deletions(-)
+"
+7e84d31e737c33f5ba19a6eac930cb86456a7ac2,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 17:22:26,Tested location CRUD,albe;   main,"commit 7e84d31e737c33f5ba19a6eac930cb86456a7ac2
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 17:22:26 2025 +0000
+
+    Tested location CRUD
+
+ evecs-db/function_app.py              |  26 ++---
+ evecs-db/shared_code/location_crud.py | 175 +++++++---------------------------
+ 2 files changed, 44 insertions(+), 157 deletions(-)
+"
+2b2ab36e59da8c203c9328b2cc1c348300324d27,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 16:32:09,fixed a single test,albe;   main,"commit 2b2ab36e59da8c203c9328b2cc1c348300324d27
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 16:32:09 2025 +0000
+
+    fixed a single test
+
+ evecs-db/testing/test_events_crud.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+"
+7b6ce1461977c462d3f21520be6bdf3e799f9539,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 16:27:16,eheheee,albe;   main,"commit 7b6ce1461977c462d3f21520be6bdf3e799f9539
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 16:27:16 2025 +0000
+
+    eheheee
+
+ evecs-db/.gitignore | 1 -
+ 1 file changed, 1 deletion(-)
+"
+d62d5e8541462064370b2cc187cc1a0b69eeebf2,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 16:10:35,Changed user_crud to optionally accept groups as a list of strings,albe;   main,"commit d62d5e8541462064370b2cc187cc1a0b69eeebf2
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 16:10:35 2025 +0000
+
+    Changed user_crud to optionally accept groups as a list of strings
+
+ evecs-db/shared_code/login_crud.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+34b8c3389f36b889e7677e2c9f51b5115c9a59a9,Abe,53017462+totoberni@users.noreply.github.com,2025-01-08 16:01:50,Merge pull request #26 from bryanvullo/albe,albe;   main,"commit 34b8c3389f36b889e7677e2c9f51b5115c9a59a9
+Merge: 86a5b99 e087606
+Author: Abe <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 16:01:50 2025 +0000
+
+    Merge pull request #26 from bryanvullo/albe
+    
+    I like trains
+
+ evecs-db/shared_code/login_crud.py | 16 +++++++++++-----
+ evecs-db/testing/testLogin.py      | 14 +++++++-------
+ 2 files changed, 18 insertions(+), 12 deletions(-)
+"
+e0876067311eb556149777db6454d305cae4de00,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 15:20:42,I like trains,albe;   main,"commit e0876067311eb556149777db6454d305cae4de00
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 15:20:42 2025 +0000
+
+    I like trains
+
+ evecs-db/shared_code/login_crud.py | 16 +++++++++++-----
+ evecs-db/testing/testLogin.py      | 14 +++++++-------
+ 2 files changed, 18 insertions(+), 12 deletions(-)
+"
+86a5b99472329968f3d2050c755c7667fccba6d3,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 15:00:56,Merge pull request #25 from bryanvullo/patrick,albe;   main,"commit 86a5b99472329968f3d2050c755c7667fccba6d3
+Merge: 60122f0 3126ffd
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 15:00:56 2025 +0000
+
+    Merge pull request #25 from bryanvullo/patrick
+    
+    Added updated ticket for toggling validated
+
+ evecs-db/function_app.py            |  10 ++-
+ evecs-db/shared_code/ticket_crud.py | 132 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 141 insertions(+), 1 deletion(-)
+"
+3126ffd361fbcf506f901002a2453d2d8f9a6824,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 15:00:26,Added updated ticket for toggling validated,albe;   main,"commit 3126ffd361fbcf506f901002a2453d2d8f9a6824
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 15:00:26 2025 +0000
+
+    Added updated ticket for toggling validated
+
+ evecs-db/function_app.py            |  10 ++-
+ evecs-db/shared_code/ticket_crud.py | 132 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 141 insertions(+), 1 deletion(-)
+"
+60122f0c3d64ee8d5b7b696bd222fc5c64b729a3,Abe,53017462+totoberni@users.noreply.github.com,2025-01-08 14:39:57,Merge pull request #24 from bryanvullo/albe,albe;   main,"commit 60122f0c3d64ee8d5b7b696bd222fc5c64b729a3
+Merge: 9e8d7bb 26c5f52
+Author: Abe <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 14:39:57 2025 +0000
+
+    Merge pull request #24 from bryanvullo/albe
+    
+    Albe
+
+ evecs-db/schemas/request.json       | 0
+ evecs-db/schemas/ticket.json        | 4 ++++
+ evecs-db/shared_code/ticket_crud.py | 1 +
+ 3 files changed, 5 insertions(+)
+"
+26c5f529cdb2fccfff8cd180aa57f7374c9ff718,bryanvullo,bryanvullo04@gmail.com,2025-01-08 13:33:57,test register with auth,albe;   main,"commit 26c5f529cdb2fccfff8cd180aa57f7374c9ff718
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 13:33:57 2025 +0000
+
+    test register with auth
+
+ evecs-db/testing/testRegister.py | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+"
+b7ec4ae165ad75dba1472612382b680a28f302ad,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 13:21:31,Added groups to user,albe;   main,"commit b7ec4ae165ad75dba1472612382b680a28f302ad
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 13:21:31 2025 +0000
+
+    Added groups to user
+
+ evecs-db/shared_code/login_crud.py | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+"
+1794e1793ef7ba45e0534d9aec8eb388cc23b5d9,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 14:34:44,Changed ticket schema to include optional validated property. Created tickets are always not validated,albe;   main,"commit 1794e1793ef7ba45e0534d9aec8eb388cc23b5d9
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 14:34:44 2025 +0000
+
+    Changed ticket schema to include optional validated property. Created tickets are always not validated
+
+ evecs-db/schemas/request.json       | 0
+ evecs-db/schemas/ticket.json        | 4 ++++
+ evecs-db/shared_code/ticket_crud.py | 1 +
+ 3 files changed, 5 insertions(+)
+"
+9e8d7bb440f4a30a613d2240aa6e98510303652a,bryanvullo,bryanvullo04@gmail.com,2025-01-08 13:34:31,Merge branch 'bryan',albe;   main,"commit 9e8d7bb440f4a30a613d2240aa6e98510303652a
+Merge: 1d3e082 45d154e
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 13:34:31 2025 +0000
+
+    Merge branch 'bryan'
+
+ evecs-db/testing/testRegister.py | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+"
+45d154ef112dd942068e3b0cd2a36caf294de312,bryanvullo,bryanvullo04@gmail.com,2025-01-08 13:33:57,test register with auth,albe;   main,"commit 45d154ef112dd942068e3b0cd2a36caf294de312
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 13:33:57 2025 +0000
+
+    test register with auth
+
+ evecs-db/testing/testRegister.py | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
+"
+1d3e082204ccd619c124197d3b87b177c901eb26,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 13:22:10,Merge pull request #23 from bryanvullo/patrick,albe;   main,"commit 1d3e082204ccd619c124197d3b87b177c901eb26
+Merge: d764b66 bd1e759
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 13:22:10 2025 +0000
+
+    Merge pull request #23 from bryanvullo/patrick
+    
+    Added groups to user
+
+ evecs-db/shared_code/login_crud.py | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+"
+bd1e759e56062601e24424d44ea789a58ac9d258,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 13:21:31,Added groups to user,albe;   main,"commit bd1e759e56062601e24424d44ea789a58ac9d258
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 13:21:31 2025 +0000
+
+    Added groups to user
+
+ evecs-db/shared_code/login_crud.py | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+"
+d764b6610c9b9f08f1f2ad0b95f54518abc73b09,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 13:19:37,mlmlml,albe;   main,"commit d764b6610c9b9f08f1f2ad0b95f54518abc73b09
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 13:19:37 2025 +0000
+
+    mlmlml
+
+ evecs-db/testing/{test_login_CRUD.py => test_user_crud.py} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+"
+67edd2ee5c90694b4ca3eec12fb5dd92e7219e4d,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 13:16:52,amended exp results in test_events_crud. Halas habibi,albe;   main,"commit 67edd2ee5c90694b4ca3eec12fb5dd92e7219e4d
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 13:16:52 2025 +0000
+
+    amended exp results in test_events_crud. Halas habibi
+
+ evecs-db/testing/test_events_crud.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+958cdfff4dadfba0dbdf462cac9aae5dedacfcb8,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 13:09:06,Edited user schema. Daje roma,albe;   main,"commit 958cdfff4dadfba0dbdf462cac9aae5dedacfcb8
+Merge: ed96fb6 5db8156
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 13:09:06 2025 +0000
+
+    Edited user schema. Daje roma
+
+ evecs-db/schemas/user.json | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+"
+5db8156719f7757cb22d592ed655d0961b9b9e05,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 13:08:14,edited user schema,albe;   main,"commit 5db8156719f7757cb22d592ed655d0961b9b9e05
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 13:08:14 2025 +0000
+
+    edited user schema
+
+ evecs-db/schemas/user.json | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+"
+ed96fb6f29b9d6571310509c452c55a2d8f0ecb2,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 13:06:25,Merge pull request #22 from bryanvullo/patrick,albe;   main,"commit ed96fb6f29b9d6571310509c452c55a2d8f0ecb2
+Merge: 2403683 ee38f6b
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 13:06:25 2025 +0000
+
+    Merge pull request #22 from bryanvullo/patrick
+    
+    Removed some tags which are not suitable
+
+ evecs-db/shared_code/events_crud.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+ee38f6b3aab635fdc3da83eeedfbb2a1c04dadb7,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-08 13:06:00,Removed some tags which are not suitable,albe;   main,"commit ee38f6b3aab635fdc3da83eeedfbb2a1c04dadb7
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Wed Jan 8 13:06:00 2025 +0000
+
+    Removed some tags which are not suitable
+
+ evecs-db/shared_code/events_crud.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+2403683a6cb345165d7032f4f27cc38bfeed910b,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 03:26:48,Started testing location_crud,albe;   main,"commit 2403683a6cb345165d7032f4f27cc38bfeed910b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 03:26:48 2025 +0000
+
+    Started testing location_crud
+
+ evecs-db/testing/test_events_crud.py   |  77 ++++++++-
+ evecs-db/testing/test_location_crud.py | 293 +++++++++++++++------------------
+ 2 files changed, 212 insertions(+), 158 deletions(-)
+"
+bd61d3006514799213328edc453d2a8f707d4559,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 03:09:29,Merged all event test files into one and fixed get valid groups and get valid tags (panding tests),albe;   main,"commit bd61d3006514799213328edc453d2a8f707d4559
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 03:09:29 2025 +0000
+
+    Merged all event test files into one and fixed get valid groups and get valid tags (panding tests)
+
+ evecs-db/function_app.py              |   7 +-
+ evecs-db/shared_code/events_crud.py   |   4 +-
+ evecs-db/testing/test_event_create.py | 611 ----------------------
+ evecs-db/testing/test_event_ud.py     | 379 --------------
+ evecs-db/testing/test_events_crud.py  | 951 ++++++++++++++++++++++++++++++++++
+ evecs-db/testing/test_get_event.py    | 274 ----------
+ 6 files changed, 957 insertions(+), 1269 deletions(-)
+"
+5fa5798b78a3b6367292e9ef5422a04dadbd3d51,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 02:45:48,fixed tests for get_event,albe;   main,"commit 5fa5798b78a3b6367292e9ef5422a04dadbd3d51
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 02:45:48 2025 +0000
+
+    fixed tests for get_event
+
+ evecs-db/testing/test_get_event.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+a83b727423934d125ed2af37b12ee07e9727e6e7,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 02:28:39,Fixed event update and delete functions,albe;   main,"commit a83b727423934d125ed2af37b12ee07e9727e6e7
+Merge: b0b7628 42ec511
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 02:28:39 2025 +0000
+
+    Fixed event update and delete functions
+
+ evecs-db/shared_code/events_crud.py   |  18 +-
+ evecs-db/testing/test_event_create.py |   2 +-
+ evecs-db/testing/test_event_ud.py     | 379 ++++++++++++++++++++++++++++++++++
+ evecs-db/testing/test_get_event.py    |   7 +-
+ 4 files changed, 391 insertions(+), 15 deletions(-)
+"
+42ec51117f04aa8ef598c008d8506ea06f9d467e,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 02:27:50,event update and delete now work according to tests,albe;   main,"commit 42ec51117f04aa8ef598c008d8506ea06f9d467e
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 02:27:50 2025 +0000
+
+    event update and delete now work according to tests
+
+ evecs-db/shared_code/events_crud.py   |  18 +-
+ evecs-db/testing/test_event_create.py |   2 +-
+ evecs-db/testing/test_event_ud.py     | 379 ++++++++++++++++++++++++++++++++++
+ evecs-db/testing/test_get_event.py    |   7 +-
+ 4 files changed, 391 insertions(+), 15 deletions(-)
+"
+b0b76284cbc36242562a817347be6f84300896a3,bryanvullo,bryanvullo04@gmail.com,2025-01-08 01:46:24,comment,albe;   main,"commit b0b76284cbc36242562a817347be6f84300896a3
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 01:46:24 2025 +0000
+
+    comment
+
+ evecs-db/shared_code/events_crud.py | 1 +
+ 1 file changed, 1 insertion(+)
+"
+61fbc0d4536a7fe2e0bda7595fbde881af0d4525,bryanvullo,bryanvullo04@gmail.com,2025-01-08 01:44:44,get event returns location name when getting only one event,albe;   main,"commit 61fbc0d4536a7fe2e0bda7595fbde881af0d4525
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 01:44:44 2025 +0000
+
+    get event returns location name when getting only one event
+
+ evecs-db/function_app.py            |  2 +-
+ evecs-db/shared_code/events_crud.py | 14 ++++++++++++--
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+"
+322b3b3e79bec35f7fdb49313176853930eb3991,bryanvullo,bryanvullo04@gmail.com,2025-01-08 01:03:18,Merge branch 'bryan',albe;   main,"commit 322b3b3e79bec35f7fdb49313176853930eb3991
+Merge: 07a7f59 b12d466
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 01:03:18 2025 +0000
+
+    Merge branch 'bryan'
+
+ evecs-db/shared_code/login_crud.py | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+"
+b12d4664bc4c7236b5645c8c3331e2831c95489d,bryanvullo,bryanvullo04@gmail.com,2025-01-08 01:02:05,added auth to register and login users,albe;   main,"commit b12d4664bc4c7236b5645c8c3331e2831c95489d
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Wed Jan 8 01:02:05 2025 +0000
+
+    added auth to register and login users
+
+ evecs-db/shared_code/login_crud.py | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+"
+07a7f5945b5593a67c7530b7780010ffcc7ce8d3,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 01:00:16,Changed test class name,albe;   main,"commit 07a7f5945b5593a67c7530b7780010ffcc7ce8d3
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 01:00:16 2025 +0000
+
+    Changed test class name
+
+ evecs-db/testing/test_event_create.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+750fe126c80e1f2bbc9ea2a62d8d87264074048a,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 00:51:27,I am become death,albe;   main,"commit 750fe126c80e1f2bbc9ea2a62d8d87264074048a
+Merge: 45c681f 1a89466
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 00:51:27 2025 +0000
+
+    I am become death, destroyer of worlds - Siddartha
+
+ evecs-db/shared_code/events_crud.py   |  40 +++-
+ evecs-db/testing/test_event_create.py | 348 ++++++++++++++++++++++------------
+ 2 files changed, 265 insertions(+), 123 deletions(-)
+"
+1a8946626f7a2f4b91c919103b97bcffc022d03e,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 00:41:05,create event passes all tests and all necessary validations are done. I can die happy now,albe;   main,"commit 1a8946626f7a2f4b91c919103b97bcffc022d03e
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 00:41:05 2025 +0000
+
+    create event passes all tests and all necessary validations are done. I can die happy now
+
+ evecs-db/testing/test_event_create.py | 248 ++++++++++++++++++++++++----------
+ 1 file changed, 174 insertions(+), 74 deletions(-)
+"
+a2faac3fc7d6013511d097294c2402db608744a1,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-08 00:16:29,Fixed crud tests an evil magician has stolen my time perception skills,albe;   main,"commit a2faac3fc7d6013511d097294c2402db608744a1
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Wed Jan 8 00:16:29 2025 +0000
+
+    Fixed crud tests an evil magician has stolen my time perception skills
+
+ evecs-db/shared_code/events_crud.py   |  63 ++++++++++-----------
+ evecs-db/testing/test_event_create.py | 100 ++++++++++++++++++++--------------
+ 2 files changed, 86 insertions(+), 77 deletions(-)
+"
+9427fe018879c55cb293d13fa44a97c68354886d,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 21:10:06,added capacity and time checks when creating events. Need to test them.,albe;   main,"commit 9427fe018879c55cb293d13fa44a97c68354886d
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 21:10:06 2025 +0000
+
+    added capacity and time checks when creating events. Need to test them.
+
+ evecs-db/shared_code/events_crud.py | 39 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 36 insertions(+), 3 deletions(-)
+"
+45c681f8f17e6de985cd3800ece46ace85fb9cd8,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 21:02:44,Merge pull request #21 from bryanvullo/patrick,albe;   main,"commit 45c681f8f17e6de985cd3800ece46ace85fb9cd8
+Merge: 22df286 6ea3349
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 21:02:44 2025 +0000
+
+    Merge pull request #21 from bryanvullo/patrick
+    
+    Removed 404 for ticket errors, empty array instead
+
+ evecs-db/shared_code/ticket_crud.py | 26 ++++----------------------
+ 1 file changed, 4 insertions(+), 22 deletions(-)
+"
+6ea334904f02356fbd2b16f273cd9f68bb337a45,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 21:01:47,Removed 404 for ticket errors,albe;   main,"commit 6ea334904f02356fbd2b16f273cd9f68bb337a45
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 21:01:47 2025 +0000
+
+    Removed 404 for ticket errors, empty array instead
+
+ evecs-db/shared_code/ticket_crud.py | 26 ++++----------------------
+ 1 file changed, 4 insertions(+), 22 deletions(-)
+"
+22df2866efc0b4478d4310f61642727da4487610,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 20:54:00,Merge branch 'albe',albe;   main,"commit 22df2866efc0b4478d4310f61642727da4487610
+Merge: 7000a82 1430892
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 20:54:00 2025 +0000
+
+    Merge branch 'albe'
+
+ evecs-db/function_app.py            | 17 ++++++++++++++++-
+ evecs-db/shared_code/events_crud.py | 37 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 51 insertions(+), 3 deletions(-)
+"
+1430892f0695a19f02a4a7d49c936f8904af7e66,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 20:51:12,Bestest Branchest Everest,albe;   main,"commit 1430892f0695a19f02a4a7d49c936f8904af7e66
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 20:51:12 2025 +0000
+
+    Bestest Branchest Everest
+
+ evecs-db/function_app.py            | 17 ++++++++++++++++-
+ evecs-db/shared_code/events_crud.py | 37 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 51 insertions(+), 3 deletions(-)
+"
+7000a8220219cd5bfd28dcf45ab469e2c116c424,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 20:47:19,Merge pull request #20 from bryanvullo/patrick,albe;   main,"commit 7000a8220219cd5bfd28dcf45ab469e2c116c424
+Merge: c7b12df 9d5f4f3
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 20:47:19 2025 +0000
+
+    Merge pull request #20 from bryanvullo/patrick
+    
+    Fixed get location groups
+
+ evecs-db/shared_code/location_crud.py | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+"
+9d5f4f3f9b4a450e71be487c6aed97254d9bd17d,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 20:45:57,Fixed get location groups,albe;   main,"commit 9d5f4f3f9b4a450e71be487c6aed97254d9bd17d
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 20:45:57 2025 +0000
+
+    Fixed get location groups
+
+ evecs-db/shared_code/location_crud.py | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+"
+c7b12df338acb9d4c89e294d296ae571ac1e560d,bryanvullo,bryanvullo04@gmail.com,2025-01-07 20:34:58,edit location test working,albe;   main,"commit c7b12df338acb9d4c89e294d296ae571ac1e560d
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 20:34:58 2025 +0000
+
+    edit location test working
+
+ evecs-db/testing/testEditLocation.py | 167 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 167 insertions(+)
+"
+74dfdb220d270614d4e9d8edf5beea92aaedda09,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 20:31:08,Merge pull request #19 from bryanvullo/patrick,albe;   main,"commit 74dfdb220d270614d4e9d8edf5beea92aaedda09
+Merge: 6fd3403 95889f2
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 20:31:08 2025 +0000
+
+    Merge pull request #19 from bryanvullo/patrick
+    
+    Removed img_url as required
+
+ evecs-db/shared_code/events_crud.py | 26 ++++++--------------------
+ 1 file changed, 6 insertions(+), 20 deletions(-)
+"
+95889f25c9d0cc652b081a861cdb965a431a660b,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 20:29:43,Removed img_url as required,albe;   main,"commit 95889f25c9d0cc652b081a861cdb965a431a660b
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 20:29:43 2025 +0000
+
+    Removed img_url as required
+
+ evecs-db/shared_code/events_crud.py | 26 ++++++--------------------
+ 1 file changed, 6 insertions(+), 20 deletions(-)
+"
+6fd34031230a1286696c47e0f1b5c0b66cda1a8c,bryanvullo,bryanvullo04@gmail.com,2025-01-07 19:59:34,made img optional,albe;   main,"commit 6fd34031230a1286696c47e0f1b5c0b66cda1a8c
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 19:59:34 2025 +0000
+
+    made img optional
+
+ evecs-db/schemas/event.json | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+"
+76eec20971034178e513796d4df02afc5d071d74,bryanvullo,bryanvullo04@gmail.com,2025-01-07 19:57:29,refined how GPT gives the location id,albe;   main,"commit 76eec20971034178e513796d4df02afc5d071d74
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 19:57:29 2025 +0000
+
+    refined how GPT gives the location id
+
+ evecs-db/function_app.py                |  6 ++++++
+ evecs-db/shared_code/building_names.txt |  4 ++++
+ evecs-db/testing/GPT-output.json        | 24 ++++++++++++------------
+ evecs-db/testing/testGPT.py             |  2 +-
+ 4 files changed, 23 insertions(+), 13 deletions(-)
+"
+b0d77ebffa74f0638380bfe95087f767645dd292,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 19:43:44,Updated get location groups,albe;   main,"commit b0d77ebffa74f0638380bfe95087f767645dd292
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 19:43:44 2025 +0000
+
+    Updated get location groups
+
+ evecs-db/shared_code/location_crud.py | 41 +++++++++++++++++++++++++++++++----
+ 1 file changed, 37 insertions(+), 4 deletions(-)
+"
+f9245ab9b3121f89a8bc400b2ac1d099058e5811,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 18:31:30,Added get account details,albe;   main,"commit f9245ab9b3121f89a8bc400b2ac1d099058e5811
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 18:31:30 2025 +0000
+
+    Added get account details
+
+ evecs-db/function_app.py           | 10 +++++-
+ evecs-db/shared_code/login_crud.py | 72 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 1 deletion(-)
+"
+8bc52c8b39a96da26667aecc5b1dd1517c028fff,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 18:12:33,Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool,albe;   main,"commit 8bc52c8b39a96da26667aecc5b1dd1517c028fff
+Merge: e9b159c aa63df1
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 18:12:33 2025 +0000
+
+    Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool
+
+ evecs-db/testing/test_event_create.py | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+"
+e9b159c1f639cf2300ea3bdc34c4199ca1d5e35b,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 18:12:20,Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool,albe;   main,"commit e9b159c1f639cf2300ea3bdc34c4199ca1d5e35b
+Merge: 70034c5 e19f77f
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 18:12:20 2025 +0000
+
+    Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool
+
+ evecs-db/mock_user.json               |  9 +++++
+ evecs-db/shared_code/events_crud.py   | 36 ++++++++-----------
+ evecs-db/testing/test_event_create.py | 66 ++++++++++++++++++-----------------
+ 3 files changed, 57 insertions(+), 54 deletions(-)
+"
+aa63df153fd50e803b4b7d2c1807b1111c31f2f3,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 18:11:21,Shit passes man,albe;   main,"commit aa63df153fd50e803b4b7d2c1807b1111c31f2f3
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 18:11:21 2025 +0000
+
+    Shit passes man
+
+ evecs-db/testing/test_event_create.py | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+"
+e19f77fcbbaa1772001c4f2ec141e880fbf8232f,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 18:02:24,Fixed create_event,albe;   main,"commit e19f77fcbbaa1772001c4f2ec141e880fbf8232f
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 18:02:24 2025 +0000
+
+    Fixed create_event, I am the inevitable pope of ducks
+
+ evecs-db/testing/test_event_create.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+70034c5e91e1ff42162efcf0d3ec813677e7866e,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 18:02:13,Ignore,albe;   main,"commit 70034c5e91e1ff42162efcf0d3ec813677e7866e
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 18:02:13 2025 +0000
+
+    Ignore
+
+ .gitignore | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+"
+8083d68e9c4fff32dea1ccd26545d3a0e717520e,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 17:59:56,I'm blind,albe;   main,"commit 8083d68e9c4fff32dea1ccd26545d3a0e717520e
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 17:59:56 2025 +0000
+
+    I'm blind
+
+ evecs-db/schemas/event.json         |  2 +-
+ evecs-db/shared_code/events_crud.py | 28 ++++++++++++++++++++--------
+ 2 files changed, 21 insertions(+), 9 deletions(-)
+"
+9225f1815afee35947360fbf78adb1643da7ce80,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 17:56:45,I sharted myself,albe;   main,"commit 9225f1815afee35947360fbf78adb1643da7ce80
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 17:56:45 2025 +0000
+
+    I sharted myself
+
+ evecs-db/mock_user.json               |  9 +++++
+ evecs-db/schemas/event.json           |  2 +-
+ evecs-db/shared_code/events_crud.py   | 44 ++++++++++++-----------
+ evecs-db/testing/test_event_create.py | 68 ++++++++++++++++++-----------------
+ 4 files changed, 69 insertions(+), 54 deletions(-)
+"
+4de7852b3f13efb3d9a96d1db760822cc0bf0b16,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 17:22:05,changed event schema to have groups as an array of strings,albe;   main,"commit 4de7852b3f13efb3d9a96d1db760822cc0bf0b16
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 17:22:05 2025 +0000
+
+    changed event schema to have groups as an array of strings
+
+ evecs-db/schemas/event.json         | 10 +++++++---
+ evecs-db/shared_code/events_crud.py |  2 ++
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+"
+2c2cf93ec8e1dacde7c8d17bf622b8d8127817e5,bryanvullo,bryanvullo04@gmail.com,2025-01-07 17:13:16,Merge branch 'main' into bryan,albe;   main,"commit 2c2cf93ec8e1dacde7c8d17bf622b8d8127817e5
+Merge: 2749145 3207dbc
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 17:13:16 2025 +0000
+
+    Merge branch 'main' into bryan
+
+ evecs-db/function_app.py                           |  11 +-
+ evecs-db/shared_code/events_crud.py                | 165 ++++++++-----
+ evecs-db/shared_code/ticket_crud.py                |   3 +-
+ .../{test_event_crud.py => test_event_create.py}   |   7 +-
+ evecs-db/testing/test_get_event.py                 | 273 +++++++++++++++++++++
+ 5 files changed, 390 insertions(+), 69 deletions(-)
+"
+2749145ddba63bac7cbf33ebfaa1cc3a5b704bf1,bryanvullo,bryanvullo04@gmail.com,2025-01-07 17:12:40,gpt test class,albe;   main,"commit 2749145ddba63bac7cbf33ebfaa1cc3a5b704bf1
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 17:12:40 2025 +0000
+
+    gpt test class
+
+ evecs-db/testing/testGPT.py | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+"
+fc6bc3d1a2461359ed9b946fec625cd0ad5e4939,bryanvullo,bryanvullo04@gmail.com,2025-01-07 17:12:28,testing output,albe;   main,"commit fc6bc3d1a2461359ed9b946fec625cd0ad5e4939
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 17:12:28 2025 +0000
+
+    testing output
+
+ evecs-db/testing/GPT-output.json | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+"
+8a9d6dc3be862a880af2810992ce1b940e98e81a,bryanvullo,bryanvullo04@gmail.com,2025-01-07 17:12:22,added room id and meta-schema,albe;   main,"commit 8a9d6dc3be862a880af2810992ce1b940e98e81a
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 17:12:22 2025 +0000
+
+    added room id and meta-schema
+
+ evecs-db/schemas/event.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+"
+d9a36b78e1098c56f70505e9dbfb2757981cb8a8,bryanvullo,bryanvullo04@gmail.com,2025-01-07 17:11:46,fixed the GPT function,albe;   main,"commit d9a36b78e1098c56f70505e9dbfb2757981cb8a8
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 17:11:46 2025 +0000
+
+    fixed the GPT function
+
+ evecs-db/function_app.py | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+"
+3207dbc764a7b118d79399bc6ff4190e5112518a,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 16:59:13,commit,albe;   main,"commit 3207dbc764a7b118d79399bc6ff4190e5112518a
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 16:59:13 2025 +0000
+
+    commit
+
+ evecs-db/testing/test_get_event.py | 1 +
+ 1 file changed, 1 insertion(+)
+"
+723aab3d07e5b9cb8024ec1cfbc28c604142da58,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 16:44:01,Udated get_event,albe;   main,"commit 723aab3d07e5b9cb8024ec1cfbc28c604142da58
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 16:44:01 2025 +0000
+
+    Udated get_event
+
+ evecs-db/function_app.py                           |   2 +-
+ evecs-db/shared_code/events_crud.py                | 165 ++++++++-----
+ evecs-db/shared_code/ticket_crud.py                |   3 +-
+ .../{test_event_crud.py => test_event_create.py}   |   7 +-
+ evecs-db/testing/test_get_event.py                 | 272 +++++++++++++++++++++
+ 5 files changed, 389 insertions(+), 60 deletions(-)
+"
+d2a013ace19e462bc436a741537a21db29922aea,bryanvullo,bryanvullo04@gmail.com,2025-01-07 15:40:34,Merge branch 'main' into bryan,albe;   main,"commit d2a013ace19e462bc436a741537a21db29922aea
+Merge: 4a5a3b8 0560efe
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 15:40:34 2025 +0000
+
+    Merge branch 'main' into bryan
+
+ .gitignore                             |   1 -
+ evecs-db/function_app.py               |   2 +-
+ evecs-db/requirements.txt              |  29 +++++
+ evecs-db/schemas/location.json         |   4 +-
+ evecs-db/shared_code/events_crud.py    |  52 ++++----
+ evecs-db/shared_code/location_crud.py  | 217 +++++++++------------------------
+ evecs-db/testing/test_event_crud.py    | 132 +++++++++++---------
+ evecs-db/testing/test_location_crud.py |  46 +++----
+ evecs-db/tickets_crud_previous.txt     | 207 -------------------------------
+ 9 files changed, 216 insertions(+), 474 deletions(-)
+"
+50e6520ea44c5df31a9a2b17c42faf6eee207574,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 15:35:37,Merge pull request #18 from bryanvullo/patrick,albe;   main,"commit 50e6520ea44c5df31a9a2b17c42faf6eee207574
+Merge: 0560efe fa7215c
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 15:35:37 2025 +0000
+
+    Merge pull request #18 from bryanvullo/patrick
+    
+    Removed get room from location id
+
+ evecs-db/function_app.py | 9 ---------
+ 1 file changed, 9 deletions(-)
+"
+fa7215cd21434ecff484c356859acd3f5b059374,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 15:33:44,Removed get room from location id,albe;   main,"commit fa7215cd21434ecff484c356859acd3f5b059374
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 15:33:44 2025 +0000
+
+    Removed get room from location id
+
+ evecs-db/function_app.py | 9 ---------
+ 1 file changed, 9 deletions(-)
+"
+0560efe015a5f18a7a19f351d6ef200e89c36ed0,bryanvullo,bryanvullo04@gmail.com,2025-01-07 15:15:23,uploading requirements and updating gitignore,albe;   main,"commit 0560efe015a5f18a7a19f351d6ef200e89c36ed0
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 15:15:23 2025 +0000
+
+    uploading requirements and updating gitignore
+
+ .gitignore                |  1 -
+ evecs-db/requirements.txt | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+"
+4a5a3b8e42330025c3fea1e69d10424f7f693300,bryanvullo,bryanvullo04@gmail.com,2025-01-07 15:11:43,test gpt functions file,albe;   main,"commit 4a5a3b8e42330025c3fea1e69d10424f7f693300
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 15:11:43 2025 +0000
+
+    test gpt functions file
+
+ evecs-db/testing/testGPT.py | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+"
+cc815d701b68cc203f3444515da0ff90ed41268d,bryanvullo,bryanvullo04@gmail.com,2025-01-07 15:11:26,changed class name,albe;   main,"commit cc815d701b68cc203f3444515da0ff90ed41268d
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 15:11:26 2025 +0000
+
+    changed class name
+
+ evecs-db/testing/testRegister.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+cebb9eaddfeab96622f1156b9c67794b6b1efbcd,bryanvullo,bryanvullo04@gmail.com,2025-01-07 15:11:23,changed class name,albe;   main,"commit cebb9eaddfeab96622f1156b9c67794b6b1efbcd
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Tue Jan 7 15:11:23 2025 +0000
+
+    changed class name
+
+ evecs-db/testing/testLogin.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+ce441a25de46836c1aaec18b93dc18e4dc173475,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 14:21:53,Changed menial stuff,albe;   main,"commit ce441a25de46836c1aaec18b93dc18e4dc173475
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 14:21:53 2025 +0000
+
+    Changed menial stuff
+
+ evecs-db/function_app.py           |   2 +-
+ evecs-db/tickets_crud_previous.txt | 207 -------------------------------------
+ 2 files changed, 1 insertion(+), 208 deletions(-)
+"
+935817cefdd91d0b70a3dafd86dd02f4e9fba98b,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 02:04:11,Debugged create_event and location_crud,albe;   main,"commit 935817cefdd91d0b70a3dafd86dd02f4e9fba98b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 02:04:11 2025 +0000
+
+    Debugged create_event and location_crud
+
+ evecs-db/schemas/location.json         |   4 +-
+ evecs-db/shared_code/events_crud.py    |   5 +-
+ evecs-db/shared_code/location_crud.py  | 190 ++++++++-------------------------
+ evecs-db/testing/test_location_crud.py |  46 ++++----
+ 4 files changed, 69 insertions(+), 176 deletions(-)
+"
+6916c589f03c23909307bc677cbc37f9c10ab1f2,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-07 00:53:04,Minor changes to test_event_crud and event_crud. Refined groups,albe;   main,"commit 6916c589f03c23909307bc677cbc37f9c10ab1f2
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Jan 7 00:53:04 2025 +0000
+
+    Minor changes to test_event_crud and event_crud. Refined groups, removed types and added mandatory field room_id as well
+
+ evecs-db/shared_code/events_crud.py |  14 ++--
+ evecs-db/testing/test_event_crud.py | 132 +++++++++++++++++++++---------------
+ 2 files changed, 83 insertions(+), 63 deletions(-)
+"
+2f4d7e13fd9bc8347e981a4ac1e1d73f249e0ac9,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 00:25:32,Merge pull request #17 from bryanvullo/patrick,albe;   main,"commit 2f4d7e13fd9bc8347e981a4ac1e1d73f249e0ac9
+Merge: 9fd3799 360f5a4
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 00:25:32 2025 +0000
+
+    Merge pull request #17 from bryanvullo/patrick
+    
+    Added dummy events
+
+ evecs-db/shared_code/events_crud.py   | 37 +++++++++++++++++++++--------------
+ evecs-db/shared_code/location_crud.py | 27 +++++++++++++------------
+ 2 files changed, 36 insertions(+), 28 deletions(-)
+"
+360f5a4fd9068f97b3fca2003a40e54c7a7b373b,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-07 00:24:57,Added dummy events,albe;   main,"commit 360f5a4fd9068f97b3fca2003a40e54c7a7b373b
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Tue Jan 7 00:24:57 2025 +0000
+
+    Added dummy events
+
+ evecs-db/shared_code/events_crud.py   | 37 +++++++++++++++++++++--------------
+ evecs-db/shared_code/location_crud.py | 27 +++++++++++++------------
+ 2 files changed, 36 insertions(+), 28 deletions(-)
+"
+9fd3799007dc113c51b6edf0cdb13e0b89dc3d0f,bryanvullo,bryanvullo04@gmail.com,2025-01-06 22:39:51,Merge branch 'bryan',albe;   main,"commit 9fd3799007dc113c51b6edf0cdb13e0b89dc3d0f
+Merge: f023fa1 09a2843
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 22:39:51 2025 +0000
+
+    Merge branch 'bryan'
+
+ evecs-db/testing/testLogin.py | 75 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 61 insertions(+), 14 deletions(-)
+"
+f023fa1546b1ce648a41c1b210f64cd5ddc7489a,bryanvullo,bryanvullo04@gmail.com,2025-01-06 22:39:13,removing vscode folders from git,albe;   main,"commit f023fa1546b1ce648a41c1b210f64cd5ddc7489a
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 22:39:13 2025 +0000
+
+    removing vscode folders from git
+
+ .gitignore                       |  1 +
+ evecs-db/.gitignore              |  3 +++
+ evecs-db/.vscode/extensions.json |  6 ------
+ evecs-db/.vscode/launch.json     | 15 ---------------
+ evecs-db/.vscode/settings.json   | 18 ------------------
+ evecs-db/.vscode/tasks.json      | 27 ---------------------------
+ 6 files changed, 4 insertions(+), 66 deletions(-)
+"
+09a2843e55d56e659da79799d3c9a936bf45783b,bryanvullo,bryanvullo04@gmail.com,2025-01-06 22:36:23,test login complete,albe;   main,"commit 09a2843e55d56e659da79799d3c9a936bf45783b
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 22:36:23 2025 +0000
+
+    test login complete
+
+ evecs-db/testing/testLogin.py | 75 +++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 61 insertions(+), 14 deletions(-)
+"
+a8626ac61b99b83669b7fd4886a51cabcf7c7e3b,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-06 22:18:51,Merge pull request #16 from bryanvullo/patrick,albe;   main,"commit a8626ac61b99b83669b7fd4886a51cabcf7c7e3b
+Merge: c4d6d6d 38d63d1
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Mon Jan 6 22:18:51 2025 +0000
+
+    Merge pull request #16 from bryanvullo/patrick
+    
+    Added valid types to events crud
+
+ evecs-db/shared_code/events_crud.py | 1 +
+ 1 file changed, 1 insertion(+)
+"
+38d63d1225546d9049f43fb8d01cd7caa823e138,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-06 22:18:22,Added valid types to events crud,albe;   main,"commit 38d63d1225546d9049f43fb8d01cd7caa823e138
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Mon Jan 6 22:18:22 2025 +0000
+
+    Added valid types to events crud
+
+ evecs-db/shared_code/events_crud.py | 1 +
+ 1 file changed, 1 insertion(+)
+"
+c4d6d6ddf190ff11685ddc6cb168bf60a5097227,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 20:09:13,Merged  'albe' branch - redefined location schema - started writing location crud - enhanced create_event endpoint,albe;   main,"commit c4d6d6ddf190ff11685ddc6cb168bf60a5097227
+Merge: e1f62da 7cf8c4b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 20:09:13 2025 +0000
+
+    Merged  'albe' branch
+    - redefined location schema
+    - started writing location crud
+    - enhanced create_event endpoint
+
+ .gitignore                               |   1 -
+ .vscode/extensions.json                  |   6 +
+ .vscode/launch.json                      |  15 ++
+ .vscode/settings.json                    |   9 +
+ .vscode/tasks.json                       |  33 +++
+ evecs-db/.vscode/extensions.json         |   6 +
+ evecs-db/.vscode/launch.json             |  15 ++
+ evecs-db/.vscode/settings.json           |  18 ++
+ evecs-db/.vscode/tasks.json              |  27 ++
+ evecs-db/function_app.py                 |  51 +++-
+ evecs-db/schemas/ecs_buildings_data.json |  14 +-
+ evecs-db/schemas/event.json              |   6 -
+ evecs-db/schemas/location.json           |  55 ++--
+ evecs-db/shared_code/events_crud.py      | 198 ++++++++-------
+ evecs-db/shared_code/location_crud.py    | 418 +++++++++++++++++++++++++++++++
+ evecs-db/testing/test_event_crud.py      |  29 +--
+ evecs-db/testing/test_location_crud.py   | 371 +++++++++++++++++++++++++++
+ 17 files changed, 1127 insertions(+), 145 deletions(-)
+"
+7cf8c4bde50fcdfc6391c7d70f9f3c806dd1485a,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 20:06:02,Committing before switching branch - made locations_crud.py,albe;   main,"commit 7cf8c4bde50fcdfc6391c7d70f9f3c806dd1485a
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 20:06:02 2025 +0000
+
+    Committing before switching branch
+    - made locations_crud.py
+
+ evecs-db/function_app.py               |  51 ++++-
+ evecs-db/shared_code/events_crud.py    |   1 +
+ evecs-db/shared_code/location_crud.py  | 359 +++++++++++++++++++++++++++++++
+ evecs-db/testing/test_location_crud.py | 371 +++++++++++++++++++++++++++++++++
+ 4 files changed, 778 insertions(+), 4 deletions(-)
+"
+28c288bed8b9b2cef002f3681c5154410c34a3e1,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 17:59:49,Added back some event_crud functions that were missing,albe;   main,"commit 28c288bed8b9b2cef002f3681c5154410c34a3e1
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 17:59:49 2025 +0000
+
+    Added back some event_crud functions that were missing
+
+ evecs-db/shared_code/events_crud.py | 272 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 270 insertions(+), 2 deletions(-)
+"
+4bc23a413f82bc26591b034061a5f8f4e1e63f85,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 17:55:32,Commit before migrate,albe;   main,"commit 4bc23a413f82bc26591b034061a5f8f4e1e63f85
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 17:55:32 2025 +0000
+
+    Commit before migrate
+
+ evecs-db/shared_code/events_crud.py   | 4 +++-
+ evecs-db/shared_code/location_crud.py | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+"
+9f91637ee2b53b96fc561f177ccf1af6e1dcfe83,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 17:19:38,Added the location and room checking to create_event,albe;   main,"commit 9f91637ee2b53b96fc561f177ccf1af6e1dcfe83
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 17:19:38 2025 +0000
+
+    Added the location and room checking to create_event
+
+ evecs-db/schemas/ecs_buildings_data.json |  14 +-
+ evecs-db/schemas/location.json           |  55 +++--
+ evecs-db/shared_code/events_crud.py      | 369 ++++++-------------------------
+ evecs-db/shared_code/location_crud.py    |  59 +++++
+ 4 files changed, 170 insertions(+), 327 deletions(-)
+"
+e1f62dad8db58c74a8ef0716c925605ca9d93343,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-06 17:17:01,Merge pull request #15 from bryanvullo/patrick,albe;   main,"commit e1f62dad8db58c74a8ef0716c925605ca9d93343
+Merge: 900901b cd9bcb0
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Mon Jan 6 17:17:01 2025 +0000
+
+    Merge pull request #15 from bryanvullo/patrick
+    
+    Implemented tickets
+
+ evecs-db/schemas/ticket.json        |  14 +--
+ evecs-db/shared_code/ticket_crud.py | 176 ++++++++++++++++++++++++++++--------
+ 2 files changed, 145 insertions(+), 45 deletions(-)
+"
+cd9bcb06e8738232c3148a273957d1523d8744de,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-06 17:15:20,Implemented tickets,albe;   main,"commit cd9bcb06e8738232c3148a273957d1523d8744de
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Mon Jan 6 17:15:20 2025 +0000
+
+    Implemented tickets
+
+ evecs-db/schemas/ticket.json        |  14 +--
+ evecs-db/shared_code/ticket_crud.py | 176 ++++++++++++++++++++++++++++--------
+ 2 files changed, 145 insertions(+), 45 deletions(-)
+"
+8b1877a4a5438338fcee3d140aadf459042b5712,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 15:51:09,Removed max_tick_pp from event schema and events_crud.py,albe;   main,"commit 8b1877a4a5438338fcee3d140aadf459042b5712
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 15:51:09 2025 +0000
+
+    Removed max_tick_pp from event schema and events_crud.py
+
+ evecs-db/schemas/event.json         |  6 -----
+ evecs-db/shared_code/events_crud.py | 34 +++++----------------------
+ evecs-db/testing/test_event_crud.py | 46 +++++++++----------------------------
+ 3 files changed, 17 insertions(+), 69 deletions(-)
+"
+900901b082d2ca941737ba11f2f454e409e7eefb,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 14:58:50,Edited user document to include groups in required fields,albe;   main,"commit 900901b082d2ca941737ba11f2f454e409e7eefb
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 14:58:50 2025 +0000
+
+    Edited user document to include groups in required fields
+
+ evecs-db/schemas/user.json | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+"
+ead91f99eda09e397a86ded8e66d6da05977d2bf,bryanvullo,bryanvullo04@gmail.com,2025-01-06 14:57:59,test login start,albe;   main,"commit ead91f99eda09e397a86ded8e66d6da05977d2bf
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 14:57:59 2025 +0000
+
+    test login start
+
+ evecs-db/testing/testLogin.py | 63 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 63 insertions(+)
+"
+2056512bb25922c420dec2cc146e48186b4e2708,bryanvullo,bryanvullo04@gmail.com,2025-01-06 14:57:49,test register working,albe;   main,"commit 2056512bb25922c420dec2cc146e48186b4e2708
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 14:57:49 2025 +0000
+
+    test register working
+
+ evecs-db/testing/testRegister.py | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+"
+b82f1c06888231a87d6b1358811c281ebc94a496,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 14:56:11,tests work now need to keep fixing events crud.,albe;   main,"commit b82f1c06888231a87d6b1358811c281ebc94a496
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 14:56:11 2025 +0000
+
+    tests work now need to keep fixing events crud.
+
+ evecs-db/.vscode/settings.json | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+"
+c763cba856365a13c01a9f9ab8e2474731d24662,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 13:51:46,Committing before moving to branch,albe;   main,"commit c763cba856365a13c01a9f9ab8e2474731d24662
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 13:51:46 2025 +0000
+
+    Committing before moving to branch
+
+ evecs-db/.vscode/settings.json | 18 ------------------
+ 1 file changed, 18 deletions(-)
+"
+585a3c6d88b85c9d76d38a82874338af1012b5cc,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 22:30:27,finished fixing create_event need to add ticket instantiation for that lols,albe;   main,"commit 585a3c6d88b85c9d76d38a82874338af1012b5cc
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 22:30:27 2025 +0000
+
+    finished fixing create_event need to add ticket instantiation for that lols
+
+ evecs-db/testing/test_event_crud.py | 50 +++++++++++++++++++++++++------------
+ 1 file changed, 34 insertions(+), 16 deletions(-)
+"
+23d528fc87efabdbcc2dc2b3d9d83ab32ec318c2,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 22:12:12,added groups list and redeployed,albe;   main,"commit 23d528fc87efabdbcc2dc2b3d9d83ab32ec318c2
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 22:12:12 2025 +0000
+
+    added groups list and redeployed
+
+ evecs-db/schemas/event.json         |  6 ++--
+ evecs-db/shared_code/events_crud.py | 53 +++++++++++++++---------------
+ evecs-db/testing/test_event_crud.py | 65 +++++++++++++++++++------------------
+ 3 files changed, 64 insertions(+), 60 deletions(-)
+"
+f3f83841d36915de791bd0bbc1b1b4c2933b10b7,bryanvullo,bryanvullo04@gmail.com,2025-01-06 14:48:32,git ignore,albe;   main,"commit f3f83841d36915de791bd0bbc1b1b4c2933b10b7
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 14:48:32 2025 +0000
+
+    git ignore
+
+ .gitignore                               | 140 ++++++
+ README.md                                |   5 +
+ evecs-db/.funcignore                     |   8 +
+ evecs-db/.gitignore                      | 135 ++++++
+ evecs-db/function_app.py                 | 222 +++++++++
+ evecs-db/host.json                       |  15 +
+ evecs-db/schemas/ecs_buildings_data.json |  83 ++++
+ evecs-db/schemas/event.json              |  78 +++
+ evecs-db/schemas/location.json           |  69 +++
+ evecs-db/schemas/ticket.json             |  25 +
+ evecs-db/schemas/user.json               |  29 ++
+ evecs-db/shared_code/events_crud.py      | 796 +++++++++++++++++++++++++++++++
+ evecs-db/shared_code/location_crud.py    |  75 +++
+ evecs-db/shared_code/login_crud.py       | 324 +++++++++++++
+ evecs-db/shared_code/ticket_crud.py      | 213 +++++++++
+ evecs-db/testing/testRegister.py         |  41 ++
+ evecs-db/testing/test_event_crud.py      | 479 +++++++++++++++++++
+ evecs-db/testing/test_login_CRUD.py      |   0
+ evecs-db/tickets_crud_previous.txt       | 207 ++++++++
+ project_structure.txt                    | Bin 0 -> 37382 bytes
+ 20 files changed, 2944 insertions(+)
+"
+f1233e5a98be79b6fac7868f603041b253ecc82f,bryanvullo,bryanvullo04@gmail.com,2025-01-06 14:48:21,git ignore,albe;   main,"commit f1233e5a98be79b6fac7868f603041b253ecc82f
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Jan 6 14:48:21 2025 +0000
+
+    git ignore
+
+ .gitignore                               | 139 ------
+ README.md                                |   5 -
+ evecs-db/.funcignore                     |   8 -
+ evecs-db/.gitignore                      | 135 ------
+ evecs-db/.vscode/extensions.json         |   6 -
+ evecs-db/.vscode/launch.json             |  15 -
+ evecs-db/.vscode/settings.json           |  18 -
+ evecs-db/.vscode/tasks.json              |  27 --
+ evecs-db/function_app.py                 | 222 ---------
+ evecs-db/host.json                       |  15 -
+ evecs-db/requirements.txt                |  30 --
+ evecs-db/schemas/ecs_buildings_data.json |  83 ----
+ evecs-db/schemas/event.json              |  78 ---
+ evecs-db/schemas/location.json           |  69 ---
+ evecs-db/schemas/ticket.json             |  25 -
+ evecs-db/schemas/user.json               |  29 --
+ evecs-db/shared_code/events_crud.py      | 796 -------------------------------
+ evecs-db/shared_code/location_crud.py    |  75 ---
+ evecs-db/shared_code/login_crud.py       | 323 -------------
+ evecs-db/shared_code/ticket_crud.py      | 213 ---------
+ evecs-db/testing/test_event_crud.py      | 479 -------------------
+ evecs-db/testing/test_login_CRUD.py      |   0
+ evecs-db/tickets_crud_previous.txt       | 207 --------
+ project_structure.txt                    | Bin 37382 -> 0 bytes
+ 24 files changed, 2997 deletions(-)
+"
+7703dd58f8b9f19d503d065ca585804820987ac3,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 14:43:10,Commit,albe;   main,"commit 7703dd58f8b9f19d503d065ca585804820987ac3
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 14:43:10 2025 +0000
+
+    Commit
+
+ .gitignore                       |  1 -
+ .vscode/extensions.json          |  6 ++++++
+ .vscode/launch.json              | 15 +++++++++++++++
+ .vscode/settings.json            |  9 +++++++++
+ .vscode/tasks.json               | 33 +++++++++++++++++++++++++++++++++
+ evecs-db/.vscode/extensions.json |  6 ++++++
+ evecs-db/.vscode/launch.json     | 15 +++++++++++++++
+ evecs-db/.vscode/settings.json   | 18 ++++++++++++++++++
+ evecs-db/.vscode/tasks.json      | 27 +++++++++++++++++++++++++++
+ 9 files changed, 129 insertions(+), 1 deletion(-)
+"
+4cba1f3c07e4b40bd4b8ddf0a0fcf18ce099ee70,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 14:40:18,commit,albe;   main,"commit 4cba1f3c07e4b40bd4b8ddf0a0fcf18ce099ee70
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 14:40:18 2025 +0000
+
+    commit
+
+ evecs-db/schemas/event.json         | 2 +-
+ evecs-db/shared_code/events_crud.py | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+"
+d8a81ac65323bd79694950cb2448da4fc7a00a83,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-06 13:51:46,Committing before moving to branch,albe;   main,"commit d8a81ac65323bd79694950cb2448da4fc7a00a83
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Jan 6 13:51:46 2025 +0000
+
+    Committing before moving to branch
+
+ .gitignore                       |  1 -
+ evecs-db/.vscode/extensions.json |  6 ++++++
+ evecs-db/.vscode/launch.json     | 15 +++++++++++++++
+ evecs-db/.vscode/settings.json   | 18 ++++++++++++++++++
+ evecs-db/.vscode/tasks.json      | 27 +++++++++++++++++++++++++++
+ 5 files changed, 66 insertions(+), 1 deletion(-)
+"
+9566f00764d09f931095d866819d32d996f13721,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 22:30:27,finished fixing create_event need to add ticket instantiation for that lols,albe;   main,"commit 9566f00764d09f931095d866819d32d996f13721
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 22:30:27 2025 +0000
+
+    finished fixing create_event need to add ticket instantiation for that lols
+
+ evecs-db/testing/test_event_crud.py | 50 +++++++++++++++++++++++++------------
+ 1 file changed, 34 insertions(+), 16 deletions(-)
+"
+8e6501edfc3c451fc3384602f359f898a6b8ee16,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 22:12:12,added groups list and redeployed,albe;   main,"commit 8e6501edfc3c451fc3384602f359f898a6b8ee16
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 22:12:12 2025 +0000
+
+    added groups list and redeployed
+
+ evecs-db/schemas/event.json         |  8 ++---
+ evecs-db/shared_code/events_crud.py | 54 +++++++++++++++---------------
+ evecs-db/testing/test_event_crud.py | 65 +++++++++++++++++++------------------
+ 3 files changed, 66 insertions(+), 61 deletions(-)
+"
+3e5ac98aa50d7cd5c15cd0894c40e6c356d834bd,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 18:45:59,Minor changes in testing,albe;   main,"commit 3e5ac98aa50d7cd5c15cd0894c40e6c356d834bd
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 18:45:59 2025 +0000
+
+    Minor changes in testing
+
+ evecs-db/function_app.py            |  4 +---
+ evecs-db/testing/test_event_crud.py | 16 ++++++++--------
+ 2 files changed, 9 insertions(+), 11 deletions(-)
+"
+5dc281f527989fdc33d1d6e39fed9c791549bfc6,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-05 17:56:56,Merge pull request #14 from bryanvullo/patrick,albe;   main,"commit 5dc281f527989fdc33d1d6e39fed9c791549bfc6
+Merge: 605309a e7c1787
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Sun Jan 5 17:56:56 2025 +0000
+
+    Merge pull request #14 from bryanvullo/patrick
+    
+    Removed get_tickets and update_ticket
+
+ evecs-db/function_app.py            |  22 +----
+ evecs-db/shared_code/ticket_crud.py | 161 ------------------------------------
+ 2 files changed, 4 insertions(+), 179 deletions(-)
+"
+e7c17875814cd1411c942c5e1527fd448107adf9,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-05 17:54:47,Removed get_tickets and update_ticket,albe;   main,"commit e7c17875814cd1411c942c5e1527fd448107adf9
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Sun Jan 5 17:54:47 2025 +0000
+
+    Removed get_tickets and update_ticket
+
+ evecs-db/function_app.py            |  22 +----
+ evecs-db/shared_code/ticket_crud.py | 161 ------------------------------------
+ 2 files changed, 4 insertions(+), 179 deletions(-)
+"
+605309a6b6ba332f2737469a992b53ef734e1b4b,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 11:59:19,smol changes to tests,albe;   main,"commit 605309a6b6ba332f2737469a992b53ef734e1b4b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 12:59:19 2025 +0100
+
+    smol changes to tests, will create my own branch now
+
+ evecs-db/function_app.py            |  1 -
+ evecs-db/testing/test_event_crud.py | 83 ++++++++++++++++++++-----------------
+ 2 files changed, 46 insertions(+), 38 deletions(-)
+"
+347d56ed2c2840274628b9966014bf95df5886b0,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 11:15:42,removed backup folder. evecs-db contains .vscode and .gitignores to deploy the directory as a workspace. Deployment from root (ProjectManagementTool) was not possible,albe;   main,"commit 347d56ed2c2840274628b9966014bf95df5886b0
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 12:15:42 2025 +0100
+
+    removed backup folder. evecs-db contains .vscode and .gitignores to deploy the directory as a workspace. Deployment from root (ProjectManagementTool) was not possible
+
+ evecs-db-deployment/.funcignore                    |   8 -
+ evecs-db-deployment/function_app.py                | 259 -------
+ evecs-db-deployment/host.json                      |  15 -
+ .../schemas/ecs_buildings_data.json                |  83 ---
+ evecs-db-deployment/schemas/event.json             |  78 --
+ evecs-db-deployment/schemas/location.json          |  69 --
+ evecs-db-deployment/schemas/ticket.json            |  25 -
+ evecs-db-deployment/schemas/user.json              |  29 -
+ evecs-db-deployment/shared_code/events_crud.py     | 794 ---------------------
+ evecs-db-deployment/shared_code/location_crud.py   |  75 --
+ evecs-db-deployment/shared_code/login_crud.py      | 323 ---------
+ evecs-db-deployment/shared_code/ticket_crud.py     | 374 ----------
+ evecs-db-deployment/testing/test_event_crud.py     | 449 ------------
+ evecs-db-deployment/testing/test_login_CRUD.py     |   0
+ {evecs-db-deployment => evecs-db}/.gitignore       |   0
+ evecs-db/README.md                                 |   6 -
+ evecs-db/function_app.py                           | 215 +-----
+ evecs-db/host.json                                 |   5 -
+ evecs-db/testing/test_event_crud.py                |   2 +-
+ .../tickets_crud_previous.txt                      |   0
+ 20 files changed, 3 insertions(+), 2806 deletions(-)
+"
+2baf45cf2e57395c154ae7239fdc756d832d0bb8,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-05 11:05:22,fixed deployment version. Functions now online,albe;   main,"commit 2baf45cf2e57395c154ae7239fdc756d832d0bb8
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Jan 5 12:05:22 2025 +0100
+
+    fixed deployment version. Functions now online
+
+ evecs-db-deployment/.funcignore                    |   8 +
+ evecs-db-deployment/.gitignore                     | 135 ++++
+ evecs-db-deployment/function_app.py                | 259 +++++++
+ evecs-db-deployment/host.json                      |  15 +
+ .../schemas/ecs_buildings_data.json                |  83 +++
+ evecs-db-deployment/schemas/event.json             |  78 ++
+ evecs-db-deployment/schemas/location.json          |  69 ++
+ evecs-db-deployment/schemas/ticket.json            |  25 +
+ evecs-db-deployment/schemas/user.json              |  29 +
+ evecs-db-deployment/shared_code/events_crud.py     | 794 +++++++++++++++++++++
+ evecs-db-deployment/shared_code/location_crud.py   |  75 ++
+ evecs-db-deployment/shared_code/login_crud.py      | 323 +++++++++
+ evecs-db-deployment/shared_code/ticket_crud.py     | 374 ++++++++++
+ evecs-db-deployment/testing/test_event_crud.py     | 449 ++++++++++++
+ evecs-db-deployment/testing/test_login_CRUD.py     |   0
+ evecs-db-deployment/tickets_crud_previous.txt      | 207 ++++++
+ 16 files changed, 2923 insertions(+)
+"
+a648823eb2030afb3bf0fa5c102fa4da761b7437,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-03 21:46:28,Merge pull request #13 from bryanvullo/patrick,albe;   main,"commit a648823eb2030afb3bf0fa5c102fa4da761b7437
+Merge: 19eb3e4 807a163
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Fri Jan 3 21:46:28 2025 +0000
+
+    Merge pull request #13 from bryanvullo/patrick
+    
+    Fixed formatting location endpoint
+
+ evecs-db/shared_code/events_crud.py   |  2 +-
+ evecs-db/shared_code/location_crud.py | 12 +++++++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+"
+807a163374da70cb94f731f6ade4206cd334c3ef,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-03 21:44:50,Fixed formatting location endpoint,albe;   main,"commit 807a163374da70cb94f731f6ade4206cd334c3ef
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Fri Jan 3 21:44:50 2025 +0000
+
+    Fixed formatting location endpoint
+
+ evecs-db/shared_code/events_crud.py   |  2 +-
+ evecs-db/shared_code/location_crud.py | 12 +++++++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+"
+19eb3e416ff420920fb3f5413baee840916f1212,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-03 21:01:15,Merge pull request #12 from bryanvullo/patrick,albe;   main,"commit 19eb3e416ff420920fb3f5413baee840916f1212
+Merge: 3ce7832 eb4e093
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Fri Jan 3 21:01:15 2025 +0000
+
+    Merge pull request #12 from bryanvullo/patrick
+    
+    Added get location ID's and groups endpoint
+
+ evecs-db/function_app.py              | 24 +++++++++----
+ evecs-db/shared_code/location_crud.py | 65 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 6 deletions(-)
+"
+eb4e0939706e8398b80bbefb60613d677c27cfd1,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-03 20:54:01,Added get location ID's and groups endpoint,albe;   main,"commit eb4e0939706e8398b80bbefb60613d677c27cfd1
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Fri Jan 3 20:54:01 2025 +0000
+
+    Added get location ID's and groups endpoint
+
+ evecs-db/function_app.py              | 24 +++++++++----
+ evecs-db/shared_code/location_crud.py | 65 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 6 deletions(-)
+"
+3ce7832f2aadd8aa5da0ea9550cdb2e10095f242,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-03 17:18:55,Merge branch 'tests',albe;   main,"commit 3ce7832f2aadd8aa5da0ea9550cdb2e10095f242
+Merge: 0408c8f 7344998
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Fri Jan 3 18:18:55 2025 +0100
+
+    Merge branch 'tests'
+
+ evecs-db/function_app.py            |   9 +-
+ evecs-db/requirements.txt           |   1 +
+ evecs-db/schemas/event.json         |  34 +--
+ evecs-db/shared_code/events_crud.py |  43 +++-
+ evecs-db/testing/test_event_crud.py | 449 ++++++++++++++++++++++++++++++++++++
+ evecs-db/testing/test_login_CRUD.py |   0
+ project_structure.txt               | Bin 0 -> 37382 bytes
+ 7 files changed, 504 insertions(+), 32 deletions(-)
+"
+7344998835b4bfa7293c950523659ba678781d07,totoberni,53017462+totoberni@users.noreply.github.com,2025-01-03 17:17:11,changed some of the testing for events_crud checkpoints. Need to finish testing the rest,albe;   main,"commit 7344998835b4bfa7293c950523659ba678781d07
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Fri Jan 3 18:17:11 2025 +0100
+
+    changed some of the testing for events_crud checkpoints. Need to finish testing the rest
+
+ evecs-db/shared_code/events_crud.py | 39 ++++++++++++++++++++++++-------------
+ evecs-db/testing/test_event_crud.py |  4 ++--
+ 2 files changed, 28 insertions(+), 15 deletions(-)
+"
+0408c8ff921ed39de62e3a723ee68db2836a04bd,Abdulbari,bari-02@hotmail.com,2025-01-02 21:22:37,Merge branch 'newLocationSchema',albe;   main,"commit 0408c8ff921ed39de62e3a723ee68db2836a04bd
+Merge: 2994fab 4004015
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Thu Jan 2 21:22:37 2025 +0000
+
+    Merge branch 'newLocationSchema'
+
+ evecs-db/schemas/ecs_buildings_data.json | 83 ++++++++++++++++++++++++++++++++
+ evecs-db/schemas/location.json           | 37 ++++++++++++--
+ 2 files changed, 116 insertions(+), 4 deletions(-)
+"
+2994fab060593f930b3d50f27819efb898e875f9,bryanvullo,65342555+bryanvullo@users.noreply.github.com,2025-01-02 19:11:01,Merge pull request #11 from bryanvullo/patrick,albe;   main,"commit 2994fab060593f930b3d50f27819efb898e875f9
+Merge: 76854e7 efd3b64
+Author: bryanvullo <65342555+bryanvullo@users.noreply.github.com>
+Date:   Thu Jan 2 19:11:01 2025 +0000
+
+    Merge pull request #11 from bryanvullo/patrick
+    
+    Implemented ticket CRUD and APIs
+
+ .gitignore                          |   2 +
+ evecs-db/function_app.py            | 446 ++++++++++++++++++++----------------
+ evecs-db/shared_code/ticket_crud.py | 374 ++++++++++++++++++++++++++++++
+ 3 files changed, 622 insertions(+), 200 deletions(-)
+"
+efd3b6426b69c5ef853b348bc8627780c29b7a01,rubik22-code,patrickjfremovkustov@gmail.com,2025-01-02 18:57:16,Implemented ticket CRUD and APIs,albe;   main,"commit efd3b6426b69c5ef853b348bc8627780c29b7a01
+Author: rubik22-code <patrickjfremovkustov@gmail.com>
+Date:   Thu Jan 2 18:57:16 2025 +0000
+
+    Implemented ticket CRUD and APIs
+
+ .gitignore                          |   2 +
+ evecs-db/function_app.py            | 446 ++++++++++++++++++++----------------
+ evecs-db/shared_code/ticket_crud.py | 374 ++++++++++++++++++++++++++++++
+ 3 files changed, 622 insertions(+), 200 deletions(-)
+"
+4004015c79b2cddbc370e3811893aa1538d12b25,Abdulbari,bari-02@hotmail.com,2024-12-29 21:53:21,Filled in data for buildings,albe;   main,"commit 4004015c79b2cddbc370e3811893aa1538d12b25
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Sun Dec 29 21:53:21 2024 +0000
+
+    Filled in data for buildings
+
+ evecs-db/schemas/ecs_buildings_data.json | 83 ++++++++++++++++++++++++++++++++
+ 1 file changed, 83 insertions(+)
+"
+86d1a988583a11a6cc063facd9d1345953110970,Abdulbari,bari-02@hotmail.com,2024-12-29 21:32:43,Added rooms to the location schema,albe;   main,"commit 86d1a988583a11a6cc063facd9d1345953110970
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Sun Dec 29 21:32:43 2024 +0000
+
+    Added rooms to the location schema
+
+ evecs-db/schemas/location.json | 37 +++++++++++++++++++++++++++++++++----
+ 1 file changed, 33 insertions(+), 4 deletions(-)
+"
+a6e0afc1d905f48d2c7bd14dc48509135bdae82d,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-28 21:40:04,passed ONE test,albe;   main,"commit a6e0afc1d905f48d2c7bd14dc48509135bdae82d
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sat Dec 28 22:40:04 2024 +0100
+
+    passed ONE test
+
+ evecs-db/requirements.txt           |   3 +-
+ evecs-db/schemas/event.json         |  34 ++++++------
+ evecs-db/shared_code/events_crud.py |   8 ++-
+ evecs-db/testing/test_event_crud.py | 101 +++++++++++++++++++++---------------
+ 4 files changed, 85 insertions(+), 61 deletions(-)
+"
+587e05ec8645422b175b9af699097b8d290fb29c,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-24 18:15:16,Changed test_event_crud file now discoverable by VSCode (also has access to your credentials mlmlml),albe;   main,"commit 587e05ec8645422b175b9af699097b8d290fb29c
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Tue Dec 24 19:15:16 2024 +0100
+
+    Changed test_event_crud file now discoverable by VSCode (also has access to your credentials mlmlml)
+
+ evecs-db/requirements.txt           |   2 +-
+ evecs-db/testing/test_event_crud.py |  29 +++++++++++++++++++----------
+ project_structure.txt               | Bin 0 -> 37382 bytes
+ 3 files changed, 20 insertions(+), 11 deletions(-)
+"
+1bf89e7d5706839889e360c1db5d221973a5730b,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-23 17:52:25,Started defining tests,albe;   main,"commit 1bf89e7d5706839889e360c1db5d221973a5730b
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 23 18:52:25 2024 +0100
+
+    Started defining tests, set some changes for event/create endpoint
+
+ evecs-db/function_app.py            |   9 +-
+ evecs-db/shared_code/events_crud.py |   2 +-
+ evecs-db/testing/test_event_crud.py | 423 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 430 insertions(+), 4 deletions(-)
+"
+a0e2d9a1c7ecc4f0c6f03506233b14486c13507a,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-23 12:08:38,Creates test folder,albe;   main,"commit a0e2d9a1c7ecc4f0c6f03506233b14486c13507a
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 23 13:08:38 2024 +0100
+
+    Creates test folder
+
+ evecs-db/testing/test_login_CRUD.py | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+"
+76854e7fb81e8144643b00db68ae575d8fc3d74c,bryanvullo,bryanvullo04@gmail.com,2024-12-23 11:31:26,refactored,albe;   main,"commit 76854e7fb81e8144643b00db68ae575d8fc3d74c
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 23 11:31:26 2024 +0000
+
+    refactored
+
+ evecs-db/function_app.py | 35 +++++------------------------------
+ 1 file changed, 5 insertions(+), 30 deletions(-)
+"
+5a1af44c3cf895b6a0686c85ca1c28bd60c5bb49,bryanvullo,bryanvullo04@gmail.com,2024-12-23 11:27:38,new requirement,albe;   main,"commit 5a1af44c3cf895b6a0686c85ca1c28bd60c5bb49
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 23 11:27:38 2024 +0000
+
+    new requirement
+
+ evecs-db/requirements.txt | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+"
+63d7a893704b9b733b0f905131b6bd72808b3256,bryanvullo,bryanvullo04@gmail.com,2024-12-23 11:26:14,merged Abdul and Alberto's work to main,albe;   main,"commit 63d7a893704b9b733b0f905131b6bd72808b3256
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 23 11:26:14 2024 +0000
+
+    merged Abdul and Alberto's work to main
+
+ evecs-db/function_app.py | 326 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 326 insertions(+)
+"
+70e474ecf8ac65fbd9665dc81b3b706959038688,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-23 11:15:54,Merge branch 'eventsCRUD',albe;   main,"commit 70e474ecf8ac65fbd9665dc81b3b706959038688
+Merge: ad03912 e32d101
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 23 12:15:54 2024 +0100
+
+    Merge branch 'eventsCRUD'
+
+ evecs-db/function_app.py             | 250 +----------
+ evecs-db/requirements.txt            |   7 +
+ evecs-db/schemas/event.json          |  21 +-
+ evecs-db/schemas/location.json       |  81 ++--
+ evecs-db/schemas/user.json           |  51 +--
+ evecs-db/shared_code/events_crud.py  | 775 +++++++++++++++++++++++++++++++++++
+ evecs-db/shared_code/login_crud.py   | 323 +++++++++++++++
+ evecs-db/shared_code/placeholder.txt |   1 -
+ 8 files changed, 1189 insertions(+), 320 deletions(-)
+"
+ad0391276b99a3d58a54cde781e68a785e6cbe7b,Abdulbari,bari-02@hotmail.com,2024-12-23 10:11:59,Merge branch 'ticketsCRUD',albe;   main,"commit ad0391276b99a3d58a54cde781e68a785e6cbe7b
+Merge: 4f5f502 67d8d16
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Mon Dec 23 10:11:59 2024 +0000
+
+    Merge branch 'ticketsCRUD'
+
+ evecs-db/function_app.py     | 240 ++++++++++++++++++++++++++++++++++++++++++-
+ evecs-db/schemas/ticket.json |   6 +-
+ 2 files changed, 243 insertions(+), 3 deletions(-)
+"
+67d8d16fcdc2451ac48c019ad0bcbb0cd8120dd9,Abdulbari,bari-02@hotmail.com,2024-12-23 10:07:11,Final touches for tickets crud,albe;   main,"commit 67d8d16fcdc2451ac48c019ad0bcbb0cd8120dd9
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Mon Dec 23 10:07:11 2024 +0000
+
+    Final touches for tickets crud
+
+ evecs-db/function_app.py | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+"
+e32d101d373f5e3a60b4086629cf0902a5458ca8,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-22 16:38:58,Created Login logic and pretty formatted all event CRUD. We now need to test these,albe;   main,"commit e32d101d373f5e3a60b4086629cf0902a5458ca8
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Dec 22 17:38:58 2024 +0100
+
+    Created Login logic and pretty formatted all event CRUD. We now need to test these
+
+ evecs-db/function_app.py            | 870 ++++--------------------------------
+ evecs-db/schemas/user.json          |  51 ++-
+ evecs-db/shared_code/events_crud.py | 775 ++++++++++++++++++++++++++++++++
+ evecs-db/shared_code/login_crud.py  | 323 +++++++++++++
+ 4 files changed, 1201 insertions(+), 818 deletions(-)
+"
+ea3fed952cc135f4648b1873a975a9f13c94fdec,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-22 15:21:26,Added make_calendar function with filters field. Implemented type and tag validation for CUD operations and changed some logic of D (deleting on event_id now instead of creators[0]),albe;   main,"commit ea3fed952cc135f4648b1873a975a9f13c94fdec
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Dec 22 16:21:26 2024 +0100
+
+    Added make_calendar function with filters field. Implemented type and tag validation for CUD operations and changed some logic of D (deleting on event_id now instead of creators[0])
+
+ evecs-db/function_app.py | 320 +++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 294 insertions(+), 26 deletions(-)
+"
+9416fd595c7dfb7f0d03831e024498a447f52871,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-22 14:30:46,Refined the create_event and update_event functions to implement validations,albe;   main,"commit 9416fd595c7dfb7f0d03831e024498a447f52871
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sun Dec 22 15:30:46 2024 +0100
+
+    Refined the create_event and update_event functions to implement validations
+
+ evecs-db/function_app.py  | 264 ++++++++++++++++++++++++++++++++++++++++++----
+ evecs-db/requirements.txt |   5 +-
+ 2 files changed, 247 insertions(+), 22 deletions(-)
+"
+75a6988ab133907f5cdf032f6c0c2987de6fd946,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-21 16:06:22,Added Events CRUD and logic to transfer adminship for events,albe;   main,"commit 75a6988ab133907f5cdf032f6c0c2987de6fd946
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sat Dec 21 17:06:22 2024 +0100
+
+    Added Events CRUD and logic to transfer adminship for events
+
+ evecs-db/function_app.py             | 333 ++++++++++++++++++++++++++++++++++-
+ evecs-db/requirements.txt            |   4 +
+ evecs-db/schemas/event.json          |  21 ++-
+ evecs-db/schemas/location.json       |  81 ++++-----
+ evecs-db/shared_code/placeholder.txt |   1 -
+ 5 files changed, 382 insertions(+), 58 deletions(-)
+"
+4f5f502b4508394a0e4914a5b0b71a1d622b4057,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-21 13:29:22,Added /.vscode to gitignore,albe;   main,"commit 4f5f502b4508394a0e4914a5b0b71a1d622b4057
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Sat Dec 21 14:29:22 2024 +0100
+
+    Added /.vscode to gitignore
+    
+    @bryanvullo lmk if this is fine. It removes the .vscode folder.
+
+ .gitignore | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+"
+2007ea240a49d94447a19461bae910d8ca647ce9,Abdulbari,bari-02@hotmail.com,2024-12-21 13:03:07,Added an auto-generated ticket id,albe;   main,"commit 2007ea240a49d94447a19461bae910d8ca647ce9
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Sat Dec 21 13:03:07 2024 +0000
+
+    Added an auto-generated ticket id
+
+ evecs-db/function_app.py | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+"
+217aa906f1e081b380e461552bac5b47a24ff8fa,Abdulbari,bari-02@hotmail.com,2024-12-21 12:50:57,Added CRUD operations for tickets,albe;   main,"commit 217aa906f1e081b380e461552bac5b47a24ff8fa
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Sat Dec 21 12:50:57 2024 +0000
+
+    Added CRUD operations for tickets
+
+ evecs-db/function_app.py | 231 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 230 insertions(+), 1 deletion(-)
+"
+c31130e6b489435970f365c440f20e09ad22a242,Abdulbari,bari-02@hotmail.com,2024-12-21 12:49:27,Added event_id,albe;   main,"commit c31130e6b489435970f365c440f20e09ad22a242
+Author: Abdulbari <bari-02@hotmail.com>
+Date:   Sat Dec 21 12:49:27 2024 +0000
+
+    Added event_id
+
+ evecs-db/schemas/ticket.json | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+"
+0fc38f004044daa48c0cffcbdfee1cfd9be585ec,bryanvullo,bryanvullo04@gmail.com,2024-12-19 17:08:07,function to create events using GPT,albe;   main,"commit 0fc38f004044daa48c0cffcbdfee1cfd9be585ec
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Thu Dec 19 17:08:07 2024 +0000
+
+    function to create events using GPT
+
+ evecs-db/function_app.py | 77 +++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 60 insertions(+), 17 deletions(-)
+"
+64328fe4a8b37800a554f89492360395e7e97770,bryanvullo,bryanvullo04@gmail.com,2024-12-19 17:07:47,new requirement - json schema validator,albe;   main,"commit 64328fe4a8b37800a554f89492360395e7e97770
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Thu Dec 19 17:07:47 2024 +0000
+
+    new requirement - json schema validator
+
+ evecs-db/requirements.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
+"
+f470653023daa3bef02fe3ad55337923a783a910,bryanvullo,bryanvullo04@gmail.com,2024-12-19 17:07:25,changed schema file names,albe;   main,"commit f470653023daa3bef02fe3ad55337923a783a910
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Thu Dec 19 17:07:25 2024 +0000
+
+    changed schema file names
+
+ evecs-db/schemas/{eventSchema.json => event.json}       | 0
+ evecs-db/schemas/{locationSchema.json => location.json} | 0
+ evecs-db/schemas/{ticketSchema.json => ticket.json}     | 0
+ evecs-db/schemas/{userSchema.json => user.json}         | 0
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+"
+52a03a1366eeef01c26901fd59630e44d09755e9,bryanvullo,bryanvullo04@gmail.com,2024-12-16 13:49:45,new requirements,albe;   main,"commit 52a03a1366eeef01c26901fd59630e44d09755e9
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 16 13:49:45 2024 +0000
+
+    new requirements
+
+ evecs-db/requirements.txt | 30 +++++++++++++++++++++++-------
+ 1 file changed, 23 insertions(+), 7 deletions(-)
+"
+d5f0578b868d83fb4c0df69d37ac15f6d9ff5bef,bryanvullo,bryanvullo04@gmail.com,2024-12-16 13:49:24,new imports and creating proxy objects of DB containers,albe;   main,"commit d5f0578b868d83fb4c0df69d37ac15f6d9ff5bef
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 16 13:49:24 2024 +0000
+
+    new imports and creating proxy objects of DB containers
+
+ evecs-db/function_app.py | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+"
+c34b05cfba8f97720815b88c2b1c1026ea968a99,bryanvullo,bryanvullo04@gmail.com,2024-12-16 13:48:28,route prefix updated,albe;   main,"commit c34b05cfba8f97720815b88c2b1c1026ea968a99
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 16 13:48:28 2024 +0000
+
+    route prefix updated
+
+ evecs-db/host.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+"
+1f6d265b55dca2fc80ad185d478b87b813daccf9,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-16 12:52:25,Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool,albe;   main,"commit 1f6d265b55dca2fc80ad185d478b87b813daccf9
+Merge: 30aad3c 1be0453
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 16 13:52:25 2024 +0100
+
+    Merge branch 'main' of https://github.com/bryanvullo/ProjectManagementTool
+
+ evecs-db/.gitignore => .gitignore |  3 +++
+ evecs-db/.vscode/extensions.json  |  6 ------
+ evecs-db/.vscode/launch.json      | 15 ---------------
+ evecs-db/.vscode/settings.json    |  9 ---------
+ evecs-db/.vscode/tasks.json       | 27 ---------------------------
+ 5 files changed, 3 insertions(+), 57 deletions(-)
+"
+30aad3ca7b50adeccf32a76aec8f627e172aae67,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-16 12:52:09,Added tags field to eventSchema,albe;   main,"commit 30aad3ca7b50adeccf32a76aec8f627e172aae67
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 16 13:52:09 2024 +0100
+
+    Added tags field to eventSchema
+
+ evecs-db/schemas/eventSchema.json | 7 +++++++
+ 1 file changed, 7 insertions(+)
+"
+1be0453836834f18da9fe48608620c46e8a39680,bryanvullo,bryanvullo04@gmail.com,2024-12-16 12:51:07,updated project structure,albe;   main,"commit 1be0453836834f18da9fe48608620c46e8a39680
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 16 12:51:07 2024 +0000
+
+    updated project structure
+
+ evecs-db/.gitignore => .gitignore |  0
+ evecs-db/.vscode/extensions.json  |  6 ------
+ evecs-db/.vscode/launch.json      | 15 ---------------
+ evecs-db/.vscode/settings.json    |  9 ---------
+ evecs-db/.vscode/tasks.json       | 27 ---------------------------
+ 5 files changed, 57 deletions(-)
+"
+ec3eae90171e7ca78acf420349b18197a09d60ff,bryanvullo,bryanvullo04@gmail.com,2024-12-16 12:41:47,not including vs code stuff,albe;   main,"commit ec3eae90171e7ca78acf420349b18197a09d60ff
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Mon Dec 16 12:41:47 2024 +0000
+
+    not including vs code stuff
+
+ evecs-db/.gitignore | 3 +++
+ 1 file changed, 3 insertions(+)
+"
+bf68f06e8c4b30268d37e6cf9031d5cd4b0fe8cf,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-16 12:39:50,Pushing final changes for setup,albe;   main,"commit bf68f06e8c4b30268d37e6cf9031d5cd4b0fe8cf
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 16 13:39:50 2024 +0100
+
+    Pushing final changes for setup
+
+ evecs-db/shared_code/placeholder.txt | 1 +
+ 1 file changed, 1 insertion(+)
+"
+0f8e4d802f905b5df91a2701753967825910d62a,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-16 12:35:32,Finished DB Setup Need to add keys for azure resources,albe;   main,"commit 0f8e4d802f905b5df91a2701753967825910d62a
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 16 13:35:32 2024 +0100
+
+    Finished DB Setup Need to add keys for azure resources
+
+ evecs-db/requirements.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+"
+f730679bec39d6d8e4cf8b4f9e1f59ede9a2b49e,totoberni,53017462+totoberni@users.noreply.github.com,2024-12-16 12:21:23,Setting up DB framework,albe;   main,"commit f730679bec39d6d8e4cf8b4f9e1f59ede9a2b49e
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Mon Dec 16 13:21:23 2024 +0100
+
+    Setting up DB framework
+
+ evecs-db/.funcignore                       |   8 ++
+ evecs-db/.gitignore                        | 135 +++++++++++++++++++++++++++++
+ evecs-db/.vscode/extensions.json           |   6 ++
+ evecs-db/.vscode/launch.json               |  15 ++++
+ evecs-db/.vscode/settings.json             |   9 ++
+ evecs-db/.vscode/tasks.json                |  27 ++++++
+ evecs-db/function_app.py                   |  25 ++++++
+ evecs-db/host.json                         |  15 ++++
+ evecs-db/requirements.txt                  |   9 +-
+ evecs-db/{ => schemas}/eventSchema.json    | 130 +++++++++++++--------------
+ evecs-db/{ => schemas}/locationSchema.json |   0
+ evecs-db/{ => schemas}/ticketSchema.json   |  40 ++++-----
+ evecs-db/{ => schemas}/userSchema.json     |  50 +++++------
+ 13 files changed, 355 insertions(+), 114 deletions(-)
+"
+92a45a014e19d3b08853cf146f072645791d8ca0,totoberni,53017462+totoberni@users.noreply.github.com,2024-11-28 17:17:52,Added location Schema edited eventSchema,albe;   main,"commit 92a45a014e19d3b08853cf146f072645791d8ca0
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Thu Nov 28 17:17:52 2024 +0000
+
+    Added location Schema edited eventSchema
+
+ evecs-db/eventSchema.json    | 129 +++++++++++++++++++++----------------------
+ evecs-db/locationSchema.json |  53 ++++++++++++++++++
+ 2 files changed, 117 insertions(+), 65 deletions(-)
+"
+aaa4383eeda874b733596d2592c9a1951cf16e02,totoberni,53017462+totoberni@users.noreply.github.com,2024-11-28 16:17:17,Updated the eventSchema to include the eventType,albe;   main,"commit aaa4383eeda874b733596d2592c9a1951cf16e02
+Author: totoberni <53017462+totoberni@users.noreply.github.com>
+Date:   Thu Nov 28 16:17:17 2024 +0000
+
+    Updated the eventSchema to include the eventType
+
+ evecs-db/eventSchema.json | 5 +++++
+ 1 file changed, 5 insertions(+)
+"
+a35cf34678b405d3c7eca050209c45500fe8bdd8,Abe,53017462+totoberni@users.noreply.github.com,2024-11-28 15:42:19,Created DB schema,albe;   main,"commit a35cf34678b405d3c7eca050209c45500fe8bdd8
+Author: Abe <53017462+totoberni@users.noreply.github.com>
+Date:   Thu Nov 28 15:42:19 2024 +0000
+
+    Created DB schema
+    
+    Readme.MD details further info
+
+ evecs-db/README.md         |  6 +++++
+ evecs-db/eventSchema.json  | 62 ++++++++++++++++++++++++++++++++++++++++++++++
+ evecs-db/requirements.txt  |  4 +++
+ evecs-db/ticketSchema.json | 21 ++++++++++++++++
+ evecs-db/userSchema.json   | 26 +++++++++++++++++++
+ 5 files changed, 119 insertions(+)
+"
+d07dbd21c94c423904235779cbb1253d2edde2be,bryanvullo,bryanvullo04@gmail.com,2024-10-20 23:14:45,first commit,albe;   main,"commit d07dbd21c94c423904235779cbb1253d2edde2be
+Author: bryanvullo <bryanvullo04@gmail.com>
+Date:   Sun Oct 20 23:14:45 2024 +0100
+
+    first commit
+
+ README.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+"
