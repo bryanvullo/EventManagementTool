@@ -1,0 +1,35 @@
+{
+    "location_id": "3eee9e11-eb0e-4dc7-b871-3b264b931543",
+    "location_name": "Jubilee Sport and Recreation Centre",
+    "events_ids": [],
+    "rooms": [
+      {
+        "room_id": "f8a7b614-d23c-4f56-9e83-71c563fe8c21",
+        "room_name": "Gym",
+        "capacity": 140,
+        "events_ids": [],
+        "description": "Main gymnasium facility"
+      },
+      {
+        "room_id": "c5e9d832-1b74-4c88-a7f5-9d3b6e4c8a12",
+        "room_name": "Indoor cycling studio",
+        "capacity": 20,
+        "events_ids": [],
+        "description": "Dedicated indoor cycling and spinning studio"
+      },
+      {
+        "room_id": "a2b4c6d8-e0f2-4a6c-8e0a-2c4e6f8a0b2c",
+        "room_name": "Sports hall",
+        "capacity": 220,
+        "events_ids": [],
+        "description": "Multi-purpose sports hall"
+      },
+      {
+        "room_id": "b3d5f7h9-j1l3-5n7p-9r1t-3v5x7z9b1d3",
+        "room_name": "Swimming pool",
+        "capacity": 80,
+        "events_ids": [],
+        "description": "Indoor swimming facility"
+      }
+    ]
+  }

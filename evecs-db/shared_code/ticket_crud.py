@@ -295,7 +295,7 @@ def delete_ticket(req, TicketsContainerProxy):
             "body": {"error": "Internal Server Error"}
         }
 
-def update_ticket(req, TicketsContainerProxy, UsersContainerProxy, EventsContainerProxy):
+def update_ticket(req, TicketsContainerProxy):
     """
     Updates an existing ticket.
     Updatable fields: email, validated
