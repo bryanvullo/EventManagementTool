@@ -290,9 +290,9 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
             "body": {"error": "Internal Server Error"}
         }
 
-def delete_event(req, EventsContainerProxy, UsersContainerProxy):
+def delete_event(req, EventsContainerProxy, UsersContainerProxy, TicketsContainerProxy):
     """
-    Deletes an event from the database.
+    Deletes an event from the database and all associated tickets.
     Input (JSON):
       - event_id (required)
       - user_id (required)
@@ -351,12 +351,27 @@ def delete_event(req, EventsContainerProxy, UsersContainerProxy):
                 "body": {"error": "Unauthorized: You are not allowed to delete this event."}
             }
 
+        # Get all tickets associated with this event
+        ticket_query = "SELECT * FROM c WHERE c.event_id = @event_id"
+        ticket_params = [{"name": "@event_id", "value": event_id}]
+        tickets = list(TicketsContainerProxy.query_items(
+            query=ticket_query,
+            parameters=ticket_params,
+            enable_cross_partition_query=True
+        ))
+
+        # Delete all associated tickets first
+        for ticket in tickets:
+            TicketsContainerProxy.delete_item(item=ticket["ticket_id"], partition_key=ticket["ticket_id"])
+
         # Delete the event
         EventsContainerProxy.delete_item(item=event_id, partition_key=event_id)
 
         return {
             "status_code": 200,
-            "body": {"message": f"Event '{event_id}' deleted successfully."}
+            "body": {
+                "message": f"Event '{event_id}' and {len(tickets)} associated tickets deleted successfully."
+            }
         }
 
     except Exception as e:

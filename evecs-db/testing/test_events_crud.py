@@ -10,7 +10,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError, SchemaError
 from azure.cosmos import CosmosClient, exceptions
 
-deployment = True  # Flag to switch between local and deployed endpoints
+deployment = False  # Flag to switch between local and deployed endpoints
 local_url = "http://localhost:7071/api"
 deployment_url = "https://evecs.azurewebsites.net/api"
 function_app_key = os.environ.get("FUNCTION_APP_KEY", "")
@@ -657,6 +657,82 @@ class TestIntegrationEventUpdateDelete(unittest.TestCase):
         finally:
             if event_id:
                 self._delete_event_in_db(event_id)
+
+    def test_delete_event_deletes_tickets(self):
+        """Test that deleting an event also deletes all associated tickets."""
+        # Create test event
+        resp, data = self._create_test_event()
+        self.assertIn(resp.status_code, [200, 201])
+        event_id = data.get("event_id")
+        self.assertIsNotNone(event_id)
+        self.test_events.add(event_id)
+
+        # Create some test tickets for this event
+        for i in range(3):  # Create 3 test tickets
+            ticket_id = str(uuid.uuid4())
+            ticket_doc = {
+                "id": ticket_id,  # Required by Cosmos DB
+                "ticket_id": ticket_id,  # Required by our schema
+                "user_id": self.user_id,
+                "event_id": event_id,
+                "email": f"test{i}@example.com",
+                "validated": False
+            }
+            self.db.get_container_client("tickets").create_item(ticket_doc)
+
+        # Get all tickets for this event
+        query = "SELECT * FROM c WHERE c.event_id = @event_id"
+        params = [{"name": "@event_id", "value": event_id}]
+        tickets = list(self.db.get_container_client("tickets").query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+        self.assertEqual(len(tickets), 3, "Should have created 3 tickets")
+        ticket_ids = [ticket["ticket_id"] for ticket in tickets]
+
+        # Verify tickets exist
+        for ticket_id in ticket_ids:
+            query = "SELECT * FROM c WHERE c.ticket_id = @ticket_id"
+            params = [{"name": "@ticket_id", "value": ticket_id}]
+            items = list(self.db.get_container_client("tickets").query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+            self.assertEqual(len(items), 1, f"Ticket {ticket_id} should exist before event deletion")
+
+        # Delete the event
+        delete_payload = {
+            "event_id": event_id,
+            "user_id": self.user_id
+        }
+        del_resp = requests.post(self.delete_event_url, json=delete_payload)
+        self.assertIn(del_resp.status_code, [200, 202])
+        
+        # Verify event was deleted
+        query = "SELECT * FROM c WHERE c.event_id = @event_id"
+        params = [{"name": "@event_id", "value": event_id}]
+        items = list(self.events_container.query_items(
+            query=query,
+            parameters=params,
+            enable_cross_partition_query=True
+        ))
+        self.assertEqual(len(items), 0, "Event should be deleted")
+
+        # Verify all tickets were deleted
+        for ticket_id in ticket_ids:
+            query = "SELECT * FROM c WHERE c.ticket_id = @ticket_id"
+            params = [{"name": "@ticket_id", "value": ticket_id}]
+            items = list(self.db.get_container_client("tickets").query_items(
+                query=query,
+                parameters=params,
+                enable_cross_partition_query=True
+            ))
+            self.assertEqual(len(items), 0, f"Ticket {ticket_id} should be deleted with event")
+
+        # Remove event from tracking since we deleted it
+        self.test_events.discard(event_id)
 
     # ---------------------------------------------------------------------
     # 3) Update with correct inputs

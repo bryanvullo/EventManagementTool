@@ -174,7 +174,7 @@ def update_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="delete_event", auth_level=func.AuthLevel.FUNCTION, methods=['DELETE', 'POST'])
 def delete_event_endpoint(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        result = delete_event(req, EventsContainerProxy, UsersContainerProxy)
+        result = delete_event(req, EventsContainerProxy, UsersContainerProxy, TicketsContainerProxy)
         return func.HttpResponse(
             json.dumps(result["body"]),
             status_code=result["status_code"]
