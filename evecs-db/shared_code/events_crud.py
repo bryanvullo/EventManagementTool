@@ -52,7 +52,7 @@ def format_UTC_0(dt_str):
     except (ValueError, Exception) as e: 
         return { 
             "status_code": 500, 
-            "body": {"error": f"Error converting date to GMT+0: {str(e)}"}
+            "body": {"error": f"Error converting date to GMT+0: {str(e)}" + "\n" + "Please use ISO 8601 format."}
         }
 
 
@@ -518,8 +518,20 @@ def update_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
         # (i) start_date < end_date
         if "start_date" in event_doc and "end_date" in event_doc:
             try:
-                start_dt = parser.isoparse(event_doc["start_date"])
-                end_dt = parser.isoparse(event_doc["end_date"])
+                start_utc = format_UTC_0(event_doc["start_date"])
+                end_utc = format_UTC_0(event_doc["end_date"])
+
+                # Check if format_UTC_0 returned an error
+                if isinstance(start_utc, dict) or isinstance(end_utc, dict):
+                    return {
+                        "status_code": 400,
+                        "body": {"error": "Invalid date format. Please use ISO 8601 (e.g. yyyy-MM-ddTHH:mm:ss.fffffffZ)"}
+                    }
+                
+                # Parse the UTC dates for comparison
+                start_dt = parser.isoparse(start_utc)
+                end_dt = parser.isoparse(end_utc)
+
             except ValueError:
                 return {
                     "status_code": 400,
