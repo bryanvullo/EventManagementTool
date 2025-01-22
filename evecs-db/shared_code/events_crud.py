@@ -16,9 +16,14 @@ from shared_code.ticket_crud import get_ticket
 
 # Suppose we have the following global sets for validating tags/groups:
 valid_tags = {"Lecture", "Society", "Leisure", "Sports", "Music", "Compulsory", "Optional", "Academic"} 
-valid_groups = {"COMP3200", "COMP3227", "COMP3228", "COMP3269", "COMP3420", "COMP3666", 
-                "COMP3229", "Badminton Society", "Chess Society", "Basketball Society", 
-                "Standup Comedy Society", "ECS Society"}   
+valid_groups = {
+    "COMP1311", "COMP1312", "COMP1321", "COMP1322",
+    "COMP2207", "COMP2208", "COMP2213", "COMP2215",
+    "COMP3200", 'COMP3207', "COMP3208", "COMP3211", 
+    "COMP6202", "COMP6208", "Badminton Society",
+    "Chess Society", "Basketball Society", 
+    "Standup Comedy Society", "ECS Society"
+}   
 
 # Load event schema for validation, if needed for multiple functions
 def load_event_schema():
