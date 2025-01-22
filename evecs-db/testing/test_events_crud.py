@@ -10,7 +10,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError, SchemaError
 from azure.cosmos import CosmosClient, exceptions
 
-deployment = True  # Flag to switch between local and deployed endpoints
+deployment = False  # Flag to switch between local and deployed endpoints
 local_url = "http://localhost:7071/api"
 deployment_url = "https://evecs.azurewebsites.net/api"
 function_app_key = os.environ.get("FUNCTION_APP_KEY", "")
@@ -202,6 +202,47 @@ class TestCreateEvent(unittest.TestCase):
         resp = requests.post(self.create_event_url, json=body)
         self.assertEqual(resp.status_code, 400)
         self.assertIn("Start date must be strictly before end date", resp.json()["error"])
+
+    def test_utc_0_formatting(self):
+        """
+        Test that an event with UTC != 0 start/end dates is accepted and stored in UTC+0.
+        We'll create an event with start_date in +02:00 and end_date in -01:00,
+        then verify that the database stores them with the correct UTC times.
+        """
+        body = {
+            "user_id": self.user_id,
+            "name": "UTC Timezone Test",
+            "groups": ["COMP3200"],
+            "desc": "Testing different timezones for start/end dates",
+            "location_id": self.location_id,
+            "room_id": self.room_id_1015,
+            "start_date": "2025-05-16T10:00:00+02:00",  # Should become 2025-05-16T08:00:00Z
+            "end_date": "2025-05-16T13:00:00-01:00",   # Should become 2025-05-16T14:00:00Z
+            "max_tick": 10,
+            "img_url": "https://example.com/utc_test.png",
+            "tags": ["Lecture"]
+        }
+
+        # Create the event
+        resp = requests.post(self.create_event_url, json=body)
+        self.assertIn(resp.status_code, [200, 201], "Event creation should succeed.")
+        data = resp.json()
+        # print(data)
+        event_id = data.get("event_id")
+        self.assertTrue(event_id, "Response must contain an event_id.")
+
+        # Query for the event in the database
+        query = "SELECT * FROM c WHERE c.event_id = @eid"
+        params = [{"name": "@eid", "value": event_id}]
+        items = list(self.events_container.query_items(query=query, parameters=params, enable_cross_partition_query=True))
+        self.assertEqual(len(items), 1, "Exactly one event should match the newly created event.")
+
+        event_doc = items[0]
+        self.assertEqual(event_doc["start_date"], "2025-05-16T08:00:00Z", "start_date must be in UTC+0.")
+        self.assertEqual(event_doc["end_date"], "2025-05-16T14:00:00Z", "end_date must be in UTC+0.")
+
+        # Clean up
+        self._delete_event_in_db(event_id)
 
     def test_max_tick_positive(self):
         body = {

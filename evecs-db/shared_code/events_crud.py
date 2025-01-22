@@ -37,6 +37,25 @@ def isoformat_now_plus(days_offset=0):
     dt_utc = datetime.now(tz=tz.UTC) + timedelta(days=days_offset)
     return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
+def format_UTC_0(dt_str):
+    """
+    Accepts an ISO 8601 string from any timezone and converts it to UTC+0.
+    Returns a string in yyyy-MM-ddTHH:mm:ssZ format (or with .ffffff if microseconds present).
+    """
+    try: 
+        dt = parser.isoparse(dt_str)
+        dt_utc = dt.astimezone(tz.UTC)
+        # If microseconds are 0, use simpler format without them
+        if dt_utc.microsecond == 0:
+            return dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return dt_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    except (ValueError, Exception) as e: 
+        return { 
+            "status_code": 500, 
+            "body": {"error": f"Error converting date to GMT+0: {str(e)}"}
+        }
+
+
 # TODO: Insert Alphanumeric code when event is created
 def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContainerProxy):
     """
@@ -67,13 +86,31 @@ def create_event(req, EventsContainerProxy, LocationsContainerProxy, UsersContai
 
         # ---- 1) start_date < end_date ----
         try:
-            start_dt = parser.isoparse(body["start_date"])
-            end_dt = parser.isoparse(body["end_date"])
-        except ValueError:
+            # First convert the dates to UTC format
+            start_utc = format_UTC_0(body["start_date"])
+            end_utc = format_UTC_0(body["end_date"])
+            
+            # Check if format_UTC_0 returned an error
+            if isinstance(start_utc, dict) or isinstance(end_utc, dict):
+                return {
+                    "status_code": 400,
+                    "body": {"error": "Invalid date format. Please use ISO 8601 (e.g. yyyy-MM-ddTHH:mm:ss.fffffffZ)"}
+                }
+            
+            # Parse the UTC dates for comparison
+            start_dt = parser.isoparse(start_utc)
+            end_dt = parser.isoparse(end_utc)
+            
+            # Update the body with UTC formatted dates
+            body["start_date"] = start_utc
+            body["end_date"] = end_utc
+            
+        except ValueError as e:
             return {
                 "status_code": 400,
-                "body": {"error": "Invalid date format. Please use ISO 8601 (e.g. yyyy-MM-ddTHH:mm:ss.fffffffZ)"}
+                "body": {"error": f"Invalid date format: {str(e)}"}
             }
+
         if start_dt >= end_dt:
             return {
                 "status_code": 400,
