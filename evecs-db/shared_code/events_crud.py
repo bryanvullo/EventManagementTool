@@ -20,7 +20,9 @@ valid_groups = {
     "COMP1311", "COMP1312", "COMP1321", "COMP1322",
     "COMP2207", "COMP2208", "COMP2213", "COMP2215",
     "COMP3200", 'COMP3207', "COMP3208", "COMP3211", 
-    "COMP6202", "COMP6208", "Badminton Society",
+    "COMP6202", "COMP6208", "BIOM1001", "BIOM1003",
+    "BIOM1004", "BIOM1005", "ELEC2024", "ELEC2205",
+    "ELEC2203", "ELEC3201", "Badminton Society",
     "Chess Society", "Basketball Society", 
     "Standup Comedy Society", "ECS Society"
 }   
