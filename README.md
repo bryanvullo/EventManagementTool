@@ -1,4 +1,4 @@
-# ProjectManagementTool
+# EventManagementTool
 
 Welcome! 
 Please everyone create a new branch and name it your name for now!
